@@ -1,0 +1,38 @@
+{
+  "name": "twitter-crawler",
+  "version": "1.0.0",
+  "description": "twitter crawler",
+  "main": "./src/main.js",
+  "scripts": {
+    "build": "webpack",
+    "start": "node ./dist/main.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sapphiredev/twitter-crawler.git"
+  },
+  "keywords": [
+    "twitter"
+  ],
+  "author": "sapphire",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/sapphiredev/twitter-crawler/issues"
+  },
+  "homepage": "https://github.com/sapphiredev/twitter-crawler#readme",
+  "devDependencies": {
+    "@types/node": "^10.12.0",
+    "@types/twit": "^2.2.20",
+    "ts-loader": "^5.2.2",
+    "tslint": "^5.11.0",
+    "typescript": "^3.1.3",
+    "webpack": "^4.23.0",
+    "webpack-cli": "^3.1.2",
+    "webpack-node-externals": "^1.7.2"
+  },
+  "dependencies": {
+    "googleapis": "^34.0.0",
+    "ts-node": "^7.0.1",
+    "twit": "^2.2.11"
+  }
+}

@@ -8,7 +8,7 @@ import {
 } from 'google-auth-library';
 
 export class GoogleDrive {
-	private static instance: GoogleDrive;
+	private static instance: GoogleDrive | null = null;
 
 	private auth: OAuth2Client;
 	private id: string;

@@ -9,10 +9,13 @@ export class Twitter {
 
 	private twit: Twit;
 
+	private queue: any[];
+
 	private constructor(manifest: Manifest) {
 		this.twit = new Twit({
 			...manifest,
 		});
+		this.queue = [];
 	}
 
 	public static createInstance(manifest: Manifest) {
@@ -38,5 +41,17 @@ export class Twitter {
 			ids,
 		} = res.data as any;
 		return ids;
+	}
+
+	public async getRateLimitStatus() {
+		const res = await this.twit.get('application/rate_limit_status');
+		console.log(res);
+	}
+
+	public async getUser(id: string) {
+		const res = await this.twit.get('users/show', {
+			'user_id': id,
+		});
+		console.log(res);
 	}
 }

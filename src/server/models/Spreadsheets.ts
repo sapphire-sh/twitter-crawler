@@ -41,8 +41,8 @@ export class Sheet<T> {
 		this.sheet = values.map((value, i) => {
 			return value.map((cell, j): Cell => {
 				return {
-					'x': this.getCellX(x, i),
-					'y': this.getCellY(y, j),
+					'x': this.getCellX(x, j),
+					'y': this.getCellY(y, i),
 					'value': cell,
 				};
 			});

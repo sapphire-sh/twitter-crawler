@@ -9,7 +9,7 @@ import {
 
 import {
 	Processor,
-} from '../libs';
+} from '../libs/Processor';
 
 import {
 	Command,

@@ -1,10 +1,14 @@
 import {
-	Processor,
 	GoogleAuth,
 	GoogleDrive,
 	GoogleSpreadsheets,
+	Server,
 	Twitter,
 } from './libs';
+
+import {
+	Processor,
+} from './libs/Processor';
 
 import {
 	Command,
@@ -43,6 +47,10 @@ export class App {
 
 	public async initialize() {
 		{
+			Server.createInstance();
+		}
+
+		{
 			const googleAuth = new GoogleAuth(CredentialsType.SPREADSHEETS);
 			const auth = await googleAuth.initialize();
 			if(auth === null) {
@@ -51,14 +59,14 @@ export class App {
 			GoogleSpreadsheets.createInstance(auth, SHEETS_ID);
 		}
 
-		{
-			const googleAuth = new GoogleAuth(CredentialsType.DRIVE);
-			const auth = await googleAuth.initialize();
-			if(auth === null) {
-				return;
-			}
-			GoogleDrive.createInstance(auth, DRIVE_ID);
-		}
+	// 	{
+	// 		const googleAuth = new GoogleAuth(CredentialsType.DRIVE);
+	// 		const auth = await googleAuth.initialize();
+	// 		if(auth === null) {
+	// 			return;
+	// 		}
+	// 		GoogleDrive.createInstance(auth, DRIVE_ID);
+	// 	}
 
 		{
 			const manifest = await GoogleSpreadsheets.getInstance().getManifest();
@@ -104,7 +112,25 @@ export class App {
 				await this.process(command);
 			}
 
-			await sleep(1000);
+			{
+				const spreadsheetsInstance = await GoogleSpreadsheets.getInstance();
+				const sheet = await spreadsheetsInstance.getUsers();
+				const users = sheet.data.filter((user) => {
+					return user.data === undefined;
+				});
+
+				const twitterInstance = Twitter.getInstance();
+				for(const user of users) {
+					const {
+						data,
+					} = await twitterInstance.getUser(user.id) as any;
+					console.log(`${data.id_str} ${data.screen_name}`);
+					await spreadsheetsInstance.updateUser(user, data);
+					await sleep(1000);
+				}
+			}
+
+			await sleep(10000);
 		}
 
 		{

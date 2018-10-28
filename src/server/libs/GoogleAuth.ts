@@ -29,8 +29,8 @@ export class GoogleAuth<T extends CredentialsType> {
 	constructor(e: T) {
 		this.credentialsType = e;
 		const fileName = `${this.credentialsType}.json`;
-		this.credentialsPath = path.resolve(__dirname, '../../credentials', fileName);
-		this.tokensPath = path.resolve(__dirname, '../../tokens', fileName);
+		this.credentialsPath = path.resolve(__dirname, '../../../credentials', fileName);
+		this.tokensPath = path.resolve(__dirname, '../../../tokens', fileName);
 	}
 
 	public async initialize(): Promise<OAuth2Client | null> {

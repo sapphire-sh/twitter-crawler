@@ -1,13 +1,12 @@
 import Twit from 'twit';
 
 import {
-	App,
-} from '../App';
+	CommandFactory,
+} from '../libs';
 
 import {
-	CommandFactory,
 	Processor,
-} from '../libs';
+} from '../libs/Processor';
 
 import {
 	Command,
@@ -47,7 +46,6 @@ export class Twitter extends Processor {
 			const user = await this.getUser(id);
 			{
 				const command = CommandFactory.createCommand(CommandType.SPREADSHEETS_UPDATE_USER_DATA, user);
-				App.getInstance().pushQueue(command);
 			}
 			return;
 		case CommandType.TWITTER_CRAWL_USER:
@@ -73,8 +71,15 @@ export class Twitter extends Processor {
 	}
 
 	public async getUser(id: string) {
-		const res = await this.twit.get('users/show', {
+		return this.twit.get('users/show', {
 			'user_id': id,
+		});
+	}
+
+	public async getUserTweets(userID: string) {
+		const res = await this.twit.get('statuses/user_timeline', {
+			'user_id': userID,
+			'count': 200,
 		});
 		console.log(res);
 	}

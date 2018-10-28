@@ -9,12 +9,13 @@ import {
 
 import {
 	Processor,
-} from '../libs';
+} from '../libs/Processor';
 
 import {
 	Command,
 	Manifest,
 	Sheet,
+	Coordinates,
 } from '../models';
 
 export class GoogleSpreadsheets extends Processor {
@@ -85,6 +86,7 @@ export class GoogleSpreadsheets extends Processor {
 		await this.sheets.spreadsheets.values.update({
 			'spreadsheetId': this.sheetID,
 			'range': range,
+			'valueInputOption': 'RAW',
 			'resource': {
 				'values': values,
 			},
@@ -103,11 +105,11 @@ export class GoogleSpreadsheets extends Processor {
 		return manifest;
 	}
 
-	private async getUsers(): Promise<Sheet<any>> {
+	public async getUsers(): Promise<Sheet<any>> {
 		return this.getSheet<any>('users!A2:H');
 	}
 
-	private async appendUsers(ids: string[]): Promise<void> {
+	public async appendUsers(ids: string[]): Promise<void> {
 		const sheet = await this.getUsers();
 
 		const values = ids.filter((id) => {
@@ -120,10 +122,15 @@ export class GoogleSpreadsheets extends Processor {
 			];
 		});
 
-		await this.appendSheet('accounts!A2:H', values);
+		await this.appendSheet('users!A2:H', values);
 	}
 
-	private async updateUsers(users: any): Promise<void> {
-		await this.updateSheet('', users);
+	public async updateUser(coordinates: Coordinates, user: any): Promise<void> {
+		const values = [
+			[
+				JSON.stringify(user),
+			],
+		];
+		await this.updateSheet(`users!B${coordinates.y}:B${coordinates.y}`, values);
 	}
 }

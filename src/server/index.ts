@@ -11,5 +11,5 @@ try {
 	})();
 }
 catch(err) {
-	console.log(err);
+	console.trace(err);
 }

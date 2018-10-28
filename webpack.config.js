@@ -3,14 +3,9 @@ const path = require('path');
 const webpack = require('webpack');
 const nodeExternals = require('webpack-node-externals');
 
-const env = process.env.NODE_ENV === 'development' ? 'development' : 'production';
+const env = process.env.NODE_ENV === 'production' ? 'production' : 'development';
 
-module.exports = {
-	'entry': path.resolve(__dirname, 'src', 'index.ts'),
-	'output': {
-		'path': path.resolve(__dirname, 'dist'),
-		'filename': 'main.js',
-	},
+const config = {
 	'module': {
 		'rules': [
 			{
@@ -21,7 +16,7 @@ module.exports = {
 			},
 		],
 	},
-    'devtool': false,
+	'devtool': 'source-map',
 	'resolve': {
 		'extensions': [
 			'.ts',
@@ -34,29 +29,50 @@ module.exports = {
 		new webpack.DefinePlugin({
 			'__dev': process.env.NODE_ENV === 'development',
 			'__test': process.env.NODE_ENV === 'test',
-			// '__env': (() => {
-			// 	const data = fs.readFileSync(envPath);
-			// 	return JSON.stringify(data.toString().trim().split('\n').map((e) => {
-			// 		const t = e.split('=');
-			// 		return {
-			// 			[t[0]]: t[1],
-			// 		};
-			// 	}).reduce((a, b) => {
-			// 		return {
-			// 			...a,
-			// 			...b,
-			// 		};
-			// 	}));
-			// })(),
 		}),
 		new webpack.ProgressPlugin(),
 	],
 	'mode': env,
-	'target': 'node',
-	'node': {
-		'__dirname': true,
+}
+
+module.exports = [
+	{
+		...config,
+		'entry': path.resolve(__dirname, 'src/client', 'index.tsx'),
+		'output': {
+			'path': path.resolve(__dirname, 'dist/assets'),
+			'publicPath': '/assets',
+			'filename': 'main.js',
+		},
+		'module': {
+			...config.module,
+			'rules': [
+				...config.module.rules,
+				{
+					'test': /\.html$/,
+					'use': {
+						'loader': 'file-loader',
+						'options': {
+							'name': '[name].[ext]',
+						},
+					},
+				},
+			],
+		},
 	},
-	'externals': [
-		nodeExternals(),
-	],
-};
+	{
+		...config,
+		'entry': path.resolve(__dirname, 'src/server', 'index.ts'),
+		'output': {
+			'path': path.resolve(__dirname, 'dist'),
+			'filename': 'main.js',
+		},
+		'target': 'node',
+		'node': {
+			'__dirname': true,
+		},
+		'externals': [
+			nodeExternals(),
+		],
+	},
+];

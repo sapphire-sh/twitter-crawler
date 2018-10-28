@@ -8,18 +8,25 @@ import {
 } from 'google-auth-library';
 
 import {
+	Processor,
+} from '../libs';
+
+import {
+	Command,
 	Manifest,
 	Sheet,
 } from '../models';
 
-export class GoogleSpreadsheet {
-	private static instance: GoogleSpreadsheet | null = null;
+export class GoogleSpreadsheets extends Processor {
+	private static instance: GoogleSpreadsheets | null = null;
 
 	private auth: OAuth2Client;
 	private sheetID: string;
 	private sheets: sheets_v4.Sheets;
 
 	private constructor(auth: OAuth2Client, sheetID: string) {
+		super();
+
 		this.auth = auth;
 		this.sheetID = sheetID;
 		this.sheets = google.sheets({
@@ -30,14 +37,14 @@ export class GoogleSpreadsheet {
 
 	public static createInstance(auth: OAuth2Client, sheetID: string) {
 		if(this.instance !== null) {
-			throw new Error();
+			throw new Error('cannot create spreadsheets instance');
 		}
-		this.instance = new GoogleSpreadsheet(auth, sheetID);
+		this.instance = new GoogleSpreadsheets(auth, sheetID);
 	}
 
-	public static getInstance(): GoogleSpreadsheet {
+	public static getInstance(): GoogleSpreadsheets {
 		if(this.instance === null) {
-			throw new Error();
+			throw new Error('spreadsheets instance is not created');
 		}
 		return this.instance;
 	}
@@ -84,6 +91,10 @@ export class GoogleSpreadsheet {
 		} as any, {});
 	}
 
+	public async process(command: Command) {
+		return;
+	}
+
 	public async getManifest(): Promise<Manifest> {
 		const sheet = await this.getSheet<Manifest>('manifest!A2:2');
 		const [
@@ -92,11 +103,11 @@ export class GoogleSpreadsheet {
 		return manifest;
 	}
 
-	public async getUsers(): Promise<Sheet<any>> {
+	private async getUsers(): Promise<Sheet<any>> {
 		return this.getSheet<any>('users!A2:H');
 	}
 
-	public async appendUsers(ids: string[]): Promise<void> {
+	private async appendUsers(ids: string[]): Promise<void> {
 		const sheet = await this.getUsers();
 
 		const values = ids.filter((id) => {
@@ -112,7 +123,7 @@ export class GoogleSpreadsheet {
 		await this.appendSheet('accounts!A2:H', values);
 	}
 
-	public async updateUsers(users: any): Promise<void> {
+	private async updateUsers(users: any): Promise<void> {
 		await this.updateSheet('', users);
 	}
 }

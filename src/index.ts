@@ -6,7 +6,7 @@ try {
 	(async () => {
 		const app = new App();
 		await app.initialize();
-		await app.start();
+		app.start();
 	})();
 }
 catch(err) {

@@ -1,4 +1,6 @@
+export * from './Processor';
+
 export * from './GoogleAuth';
 export * from './GoogleDrive';
-export * from './GoogleSpreadsheet';
+export * from './GoogleSpreadsheets';
 export * from './Twitter';

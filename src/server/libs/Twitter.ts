@@ -12,6 +12,7 @@ import {
 	Command,
 	CommandType,
 	Manifest,
+	User,
 } from '../models';
 
 export class Twitter extends Processor {
@@ -54,7 +55,7 @@ export class Twitter extends Processor {
 		return;
 	}
 
-	public async getFollowings() {
+	public async getFollowings(): Promise<string[]> {
 		const res = await this.twit.get('friends/ids', {
 			'stringify_ids': true,
 			'count': 5000,
@@ -62,7 +63,7 @@ export class Twitter extends Processor {
 		const {
 			ids,
 		} = res.data as any;
-		return ids;
+		return ids as string[];
 	}
 
 	public async getRateLimitStatus() {
@@ -70,10 +71,13 @@ export class Twitter extends Processor {
 		console.log(res);
 	}
 
-	public async getUser(id: string) {
-		return this.twit.get('users/show', {
+	public async getUser(id: string): Promise<User> {
+		const {
+			data,
+		} = await this.twit.get('users/show', {
 			'user_id': id,
 		});
+		return data as User;
 	}
 
 	public async getUserTweets(userID: string) {

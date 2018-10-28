@@ -78,7 +78,7 @@ export class Sheet<T> {
 		return y + j;
 	}
 
-	public find<T1 extends keyof T>(value: T1, comparer: (t: T) => boolean): T | null {
+	public find(comparer: (t: T) => boolean): T | null {
 		let data: T | null = null;
 
 		this.data.some((e) => {

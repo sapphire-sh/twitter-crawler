@@ -16,6 +16,7 @@ import {
 	Manifest,
 	Sheet,
 	Coordinates,
+	User,
 } from '../models';
 
 export class GoogleSpreadsheets extends Processor {
@@ -113,9 +114,10 @@ export class GoogleSpreadsheets extends Processor {
 		const sheet = await this.getUsers();
 
 		const values = ids.filter((id) => {
-			return sheet.find(id, (e) => {
-				return e.id === id;
+			const user = sheet.find((user) => {
+				return user.id === id;
 			});
+			return user === null;
 		}).map((id) => {
 			return [
 				id,
@@ -125,12 +127,16 @@ export class GoogleSpreadsheets extends Processor {
 		await this.appendSheet('users!A2:H', values);
 	}
 
-	public async updateUser(coordinates: Coordinates, user: any): Promise<void> {
+	public async updateUser(coordinates: Coordinates, user: User): Promise<void> {
 		const values = [
 			[
 				JSON.stringify(user),
+				user.screen_name,
+				user.name,
+				user.created_at,
+				(new Date()).toLocaleString(),
 			],
 		];
-		await this.updateSheet(`users!B${coordinates.y}:B${coordinates.y}`, values);
+		await this.updateSheet(`users!C${coordinates.y}:G${coordinates.y}`, values);
 	}
 }

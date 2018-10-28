@@ -112,25 +112,27 @@ export class App {
 				await this.process(command);
 			}
 
-			{
-				const spreadsheetsInstance = await GoogleSpreadsheets.getInstance();
-				const sheet = await spreadsheetsInstance.getUsers();
-				const users = sheet.data.filter((user) => {
-					return user.data === undefined;
-				});
+			// {
+			// 	const spreadsheetsInstance = await GoogleSpreadsheets.getInstance();
+			// 	const sheet = await spreadsheetsInstance.getUsers();
+			// 	const users = sheet.data.filter((user) => {
+			// 		return user.data === undefined;
+			// 	});
 
-				const twitterInstance = Twitter.getInstance();
-				for(const user of users) {
-					const {
-						data,
-					} = await twitterInstance.getUser(user.id) as any;
-					console.log(`${data.id_str} ${data.screen_name}`);
-					await spreadsheetsInstance.updateUser(user, data);
-					await sleep(1000);
-				}
-			}
+			// 	const twitterInstance = Twitter.getInstance();
+			// 	for(const user of users) {
+			// 		const data = await twitterInstance.getUser(user.id);
+			// 		await spreadsheetsInstance.updateUser(user, data);
+			// 		await sleep(300);
+			// 	}
 
-			await sleep(10000);
+			// 	{
+			// 		const ids = await twitterInstance.getFollowings();
+			// 		await spreadsheetsInstance.appendUsers(ids);
+			// 	}
+			// }
+
+			await sleep(1000);
 		}
 
 		{

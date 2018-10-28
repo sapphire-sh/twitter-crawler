@@ -8,7 +8,7 @@ import {
 
 import {
 	Command,
-	CommandType,
+	ProcessorType,
 	CredentialsType,
 } from './models';
 
@@ -20,8 +20,26 @@ const DRIVE_ID = '1LBftZfGtRYSfNF0azqN3t0u1dNPy05ta';
 const SHEETS_ID = '1u8gCPBQB_iWFN-bYJzRBOhOUQ6krwNG51GI_kEKQfCc';
 
 export class App {
+	private static instance: App | null = null;
+
 	private shouldProcess: boolean = false;
 	private queue: Command[] = [];
+
+	private constructor() {}
+
+	public static createInstance() {
+		if(this.instance !== null) {
+			throw new Error('cannot create app instance');
+		}
+		this.instance = new App();
+	}
+
+	public static getInstance() {
+		if(this.instance === null) {
+			throw new Error('app instance is not created');
+		}
+		return this.instance;
+	}
 
 	public async initialize() {
 		{
@@ -48,13 +66,13 @@ export class App {
 		}
 	}
 
-	private getProcessorInstance(type: CommandType): Processor | null {
+	private getProcessor(type: ProcessorType): Processor | null {
 		switch(type) {
-		case CommandType.DRIVE:
+		case ProcessorType.DRIVE:
 			return GoogleDrive.getInstance();
-		case CommandType.SPREADSHEETS:
+		case ProcessorType.SPREADSHEETS:
 			return GoogleSpreadsheets.getInstance();
-		case CommandType.TWITTER:
+		case ProcessorType.TWITTER:
 			return Twitter.getInstance();
 		default:
 			return null;
@@ -62,11 +80,15 @@ export class App {
 	}
 
 	private async process(command: Command) {
-		const processor = this.getProcessorInstance(command.type);
+		const processor = this.getProcessor(command.processorType);
 		if(processor === null) {
 			return;
 		}
 		await processor.process(command);
+	}
+
+	public pushQueue(command: Command) {
+		this.queue.push(command);
 	}
 
 	public async stop() {
@@ -77,23 +99,8 @@ export class App {
 		this.shouldProcess = true;
 
 		while(this.shouldProcess === true) {
-			const now = Date.now();
-
-			let shouldSkip: boolean = false;
-			let command: Command | null = null;
-			this.queue = this.queue.filter((e) => {
-				if(shouldSkip === true) {
-					return true;
-				}
-				if(e.ts <= now) {
-					command = e;
-					shouldSkip = true;
-					return false;
-				}
-				return true;
-			});
-
-			if(command !== null) {
+			if(this.queue.length > 0) {
+				const command = this.queue.shift()!;
 				await this.process(command);
 			}
 

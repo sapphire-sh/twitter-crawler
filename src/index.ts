@@ -4,7 +4,8 @@ import {
 
 try {
 	(async () => {
-		const app = new App();
+		App.createInstance();
+		const app = App.getInstance();
 		await app.initialize();
 		app.start();
 	})();

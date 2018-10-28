@@ -1,11 +1,17 @@
 import Twit from 'twit';
 
 import {
+	App,
+} from '../App';
+
+import {
+	CommandFactory,
 	Processor,
 } from '../libs';
 
 import {
 	Command,
+	CommandType,
 	Manifest,
 } from '../models';
 
@@ -35,6 +41,18 @@ export class Twitter extends Processor {
 	}
 
 	public async process(command: Command) {
+		switch(command.commandType) {
+		case CommandType.TWITTER_FETCH_USER:
+			const id: string = command.data;
+			const user = await this.getUser(id);
+			{
+				const command = CommandFactory.createCommand(CommandType.SPREADSHEETS_UPDATE_USER_DATA, user);
+				App.getInstance().pushQueue(command);
+			}
+			return;
+		case CommandType.TWITTER_CRAWL_USER:
+			return;
+		}
 		return;
 	}
 

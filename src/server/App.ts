@@ -2,6 +2,7 @@ import {
 	GoogleAuth,
 	GoogleDrive,
 	GoogleSpreadsheets,
+	Puppeteer,
 	Server,
 	Twitter,
 } from './libs';
@@ -71,6 +72,10 @@ export class App {
 		{
 			const manifest = await GoogleSpreadsheets.getInstance().getManifest();
 			Twitter.createInstance(manifest);
+			Puppeteer.createInstance(manifest);
+
+			const puppeteer = Puppeteer.getInstance();
+			await puppeteer.initialize();
 		}
 	}
 
@@ -106,64 +111,56 @@ export class App {
 	public async start() {
 		this.shouldProcess = true;
 
-		while(this.shouldProcess === true) {
-			if(this.queue.length > 0) {
-				const command = this.queue.shift()!;
-				await this.process(command);
+		// while(this.shouldProcess === true) {
+		// 	if(this.queue.length > 0) {
+		// 		const command = this.queue.shift()!;
+		// 		await this.process(command);
+		// 	}
+
+		{
+			const spreadsheets = await GoogleSpreadsheets.getInstance();
+			const twitter = Twitter.getInstance();
+
+			{
+				const ids = await twitter.getFollowings();
+				await spreadsheets.appendUsers(ids);
 			}
 
-			// {
-			// 	const spreadsheetsInstance = await GoogleSpreadsheets.getInstance();
-			// 	const sheet = await spreadsheetsInstance.getUsers();
-			// 	const users = sheet.data.filter((user) => {
-			// 		return user.data === undefined;
-			// 	});
+			{
+				const sheet = await spreadsheets.getUsers();
+				const users = sheet.data.filter((user) => {
+					return user.data === undefined;
+				});
 
-			// 	const twitterInstance = Twitter.getInstance();
-			// 	for(const user of users) {
-			// 		const data = await twitterInstance.getUser(user.id);
-			// 		await spreadsheetsInstance.updateUser(user, data);
-			// 		await sleep(300);
-			// 	}
-
-			// 	{
-			// 		const ids = await twitterInstance.getFollowings();
-			// 		await spreadsheetsInstance.appendUsers(ids);
-			// 	}
-			// }
-
-			await sleep(1000);
+				for(const user of users) {
+					const data = await twitter.getUser(user.id);
+					await spreadsheets.updateUser(user, data);
+					await sleep(300);
+				}
+			}
 		}
 
 		{
-			// GoogleSpreadsheet.getInstance().getUsers();
-			// const accounts = await Twitter.getInstance().getFollowings();
-			// GoogleSpreadsheet.getInstance().setAccounts(accounts);
+			const spreadsheets = await GoogleSpreadsheets.getInstance();
+			const sheet = await spreadsheets.getUsers();
+			const users = sheet.data.filter((user) => {
+				if(user.alias === undefined) {
+					return false;
+				}
+				if(user.crawled_at !== undefined) {
+					return false;
+				}
+				return true;
+			});
+
+			const puppeteer = Puppeteer.getInstance();
+
+			for(const user of users) {
+				console.log(`${user.alias} @${user.screen_name}`);
+				await puppeteer.crawlUser(user.alias, user.screen_name);
+				await spreadsheets.updateUserFlag(user);
+				await sleep(1000);
+			}
 		}
-
-		{
-			// await Twitter.getInstance().getRateLimitStatus();
-		}
-
-		{
-			// await Twitter.getInstance().getUser('1041275214821187587');
-		}
-
-		// {
-		// 	const googleAuth = new GoogleAuth<CredentialsType.DRIVE>(CredentialsType.DRIVE);
-		// 	const auth = await googleAuth.initialize();
-		// 	if(auth === null) {
-		// 		return;
-		// 	}
-		// 	const googleDrive = new GoogleDrive(auth, DRIVE_ID);
-
-		// 	let directories = await googleDrive.getDirectories('root');
-		// 	directories = directories.filter((directory) => {
-		// 		return directory.name === 'twitter-crawler';
-		// 	});
-		// 	if(directories.length === 1) {
-		// 		console.log(directories.pop());
-		// 	}
-		// }
 	}
 }

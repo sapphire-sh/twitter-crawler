@@ -94,6 +94,10 @@ export class GoogleSpreadsheets extends Processor {
 		} as any, {});
 	}
 
+	private async createSheet() {
+		await this.sheets.spreadsheets.create();
+	}
+
 	public async process(command: Command) {
 		return;
 	}
@@ -138,5 +142,14 @@ export class GoogleSpreadsheets extends Processor {
 			],
 		];
 		await this.updateSheet(`users!C${coordinates.y}:G${coordinates.y}`, values);
+	}
+
+	public async updateUserFlag(coordinates: Coordinates): Promise<void> {
+		const values = [
+			[
+				(new Date()).toLocaleString(),
+			],
+		];
+		await this.updateSheet(`users!H${coordinates.y}:H${coordinates.y}`, values);
 	}
 }

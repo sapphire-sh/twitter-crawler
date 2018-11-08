@@ -126,17 +126,16 @@ export class Puppeteer extends Processor {
 		console.log(command);
 	}
 
-	public async crawlUser(name: string, id: string) {
+	public async crawlUser(screen_name: string, alias: string, ids: string[]) {
+		console.log(`crawl ${screen_name}`);
 		if(this.browser === null) {
 			return;
 		}
 
-		const spreadsheets = GoogleSpreadsheets.getInstance();
-
 		await sleep(500);
 
 		const page = await this.browser.newPage();
-		await page.goto(`https://twitter.com/${id}/media`, {
+		await page.goto(`https://twitter.com/${screen_name}/media`, {
 			'waitUntil': 'domcontentloaded',
 		});
 
@@ -144,17 +143,23 @@ export class Puppeteer extends Processor {
 		do {
 			await sleep(500);
 
-			const length = await page.evaluate((_) => {
-				return document.querySelectorAll('.stream-items > li').length;
-			});
-			if(length > 0) {
-				shouldWait = false;
+			try {
+				const length = await page.evaluate((_) => {
+					return document.querySelectorAll('.stream-items > li').length;
+				});
+				if(length > 0) {
+					shouldWait = false;
+				}
+			}
+			catch(err) {
+				shouldWait = true;
 			}
 		}
 		while(shouldWait);
 
 		let tweets: Array<{
-			link: string | null;
+			id: string;
+			link: string;
 			images: string[];
 		}> = [];
 		let prevLength = -1;
@@ -171,8 +176,8 @@ export class Puppeteer extends Processor {
 
 			tweets = await page.evaluate((_) => {
 				return Array.from(document.querySelectorAll('.stream-items > .stream-item')).map((e) => {
-					const permalink = e.querySelector('.js-permalink');
-					const link = permalink === null ? null : permalink.getAttribute('href');
+					const permalink = e.querySelector('.js-permalink')!;
+					const link = permalink.getAttribute('href')!;
 					const images = Array.from(e.querySelectorAll('.AdaptiveMedia')).map((e) => {
 						return Array.from(e.querySelectorAll('img'));
 					}).reduce((a, b) => {
@@ -182,20 +187,33 @@ export class Puppeteer extends Processor {
 					});
 
 					return {
-						'link': link,
+						'id': link.split('/').pop(),
+						'link': `https://twitter.com${link}`,
 						'images': images,
 					};
-				});
+				}).reverse();
 			});
+
+			console.log(`tweets ${tweets.length}`);
+
+			const hasTweet = tweets.some((tweet) => {
+				return ids.indexOf(tweet.id!) !== -1;
+			});
+			console.log(`has tweet ${hasTweet}`);
+			if(hasTweet) {
+				shouldScroll = false;
+				break;
+			}
 
 			try {
 				await page.focus('.has-more-items');
 
 				if(prevLength === tweets.length) {
-					if(count > 1) {
+					if(count > 30) {
 						shouldScroll = false;
+						break;
 					}
-					await sleep(15 * 1000);
+					await sleep(1000);
 					++count;
 				}
 			}
@@ -205,21 +223,38 @@ export class Puppeteer extends Processor {
 		}
 		while(shouldScroll);
 
-		console.log(tweets);
-
 		await sleep(500);
 
-		// const images = tweets.map((tweet) => {
-		// 	return tweet.images;
-		// }).reduce((a, b) => {
-		// 	return a.concat(b);
-		// }, []);
-		// const length = images.length;
-		// for(let i = 0; i < length; ++i) {
-		// 	const image = images[i];
-		// 	console.log(`[${i + 1}/${length}] download url: ${image}`);
-		// 	await download(name, image);
-		// }
+		const spreadsheet = GoogleSpreadsheets.getInstance();
+
+		tweets = tweets.filter((tweet) => {
+			if(tweet.id === null) {
+				return true;
+			}
+			return ids.indexOf(tweet.id) === -1;
+		}).sort((a, b) => {
+			if(a.id.length === b.id.length) {
+				return a.id.localeCompare(b.id);
+			}
+			return a.id.length > b.id.length ? 1 : -1;
+		});
+
+		console.log(tweets.length);
+
+		for(const tweet of tweets) {
+			for(const image of tweet.images) {
+				console.log(`${image}`);
+				await download(alias, image);
+			}
+			await spreadsheet.appendUserTweets(screen_name, [
+				[
+					tweet.id,
+					tweet.link,
+					JSON.stringify(tweet.images),
+					(new Date()).toLocaleString(),
+				],
+			]);
+		}
 
 		await page.close();
 	}

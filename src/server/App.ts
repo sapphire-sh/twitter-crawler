@@ -117,32 +117,38 @@ export class App {
 		// 		await this.process(command);
 		// 	}
 
-		{
-			const spreadsheets = await GoogleSpreadsheets.getInstance();
-			const twitter = Twitter.getInstance();
+		// {
+		// 	const spreadsheets = await GoogleSpreadsheets.getInstance();
+		// 	const twitter = Twitter.getInstance();
 
-			{
-				const ids = await twitter.getFollowings();
-				await spreadsheets.appendUsers(ids);
-			}
+		// 	{
+		// 		const ids = await twitter.getFollowings();
+		// 		await spreadsheets.appendUsers(ids);
+		// 	}
 
-			{
-				const sheet = await spreadsheets.getUsers();
-				const users = sheet.data.filter((user) => {
-					return user.data === undefined;
-				});
+		// 	{
+		// 		const sheet = await spreadsheets.getUsers();
+		// 		if(sheet === null) {
+		// 			return;
+		// 		}
+		// 		const users = sheet.data.filter((user) => {
+		// 			return user.data === undefined;
+		// 		});
 
-				for(const user of users) {
-					const data = await twitter.getUser(user.id);
-					await spreadsheets.updateUser(user, data);
-					await sleep(300);
-				}
-			}
-		}
+		// 		for(const user of users) {
+		// 			const data = await twitter.getUser(user.id);
+		// 			await spreadsheets.updateUser(user, data);
+		// 			await sleep(300);
+		// 		}
+		// 	}
+		// }
 
 		{
 			const spreadsheets = await GoogleSpreadsheets.getInstance();
 			const sheet = await spreadsheets.getUsers();
+			if(sheet === null) {
+				return;
+			}
 			const users = sheet.data.filter((user) => {
 				if(user.alias === undefined) {
 					return false;
@@ -157,7 +163,18 @@ export class App {
 
 			for(const user of users) {
 				console.log(`${user.alias} @${user.screen_name}`);
-				await puppeteer.crawlUser(user.alias, user.screen_name);
+				let sheet = await spreadsheets.getUserSheet(user.screen_name);
+				if(sheet === null) {
+					await spreadsheets.createUserSheet(user.screen_name);
+					sheet = await spreadsheets.getUserSheet(user.screen_name);
+				}
+				if(sheet === null) {
+					return;
+				}
+				const ids = sheet.data.map((e) => {
+					return e.id;
+				}).sort();
+				await puppeteer.crawlUser(user.screen_name, user.alias, ids);
 				await spreadsheets.updateUserFlag(user);
 				await sleep(1000);
 			}

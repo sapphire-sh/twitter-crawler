@@ -139,6 +139,8 @@ export class Puppeteer extends Processor {
 			'waitUntil': 'domcontentloaded',
 		});
 
+		console.log('dom loaded');
+
 		let shouldWait = true;
 		do {
 			await sleep(500);
@@ -157,103 +159,118 @@ export class Puppeteer extends Processor {
 		}
 		while(shouldWait);
 
+		console.log('content loaded');
+
 		let tweets: Array<{
 			id: string;
 			link: string;
 			images: string[];
 		}> = [];
-		let prevLength = -1;
-		let shouldScroll = true;
-		let count = 0;
-		do {
-			prevLength = tweets.length;
+		{
+			let prevLength = -1;
+			let shouldScroll = true;
+			let count = 0;
+			do {
+				prevLength = tweets.length;
 
-			await sleep(500);
+				await sleep(500);
 
-			await page.evaluate((_) => {
-				window.scrollBy(0, document.documentElement!.scrollHeight);
-			});
+				await page.evaluate((_) => {
+					window.scrollBy(0, document.documentElement!.scrollHeight);
+				});
 
-			tweets = await page.evaluate((_) => {
-				return Array.from(document.querySelectorAll('.stream-items > .stream-item')).map((e) => {
-					const permalink = e.querySelector('.js-permalink')!;
-					const link = permalink.getAttribute('href')!;
-					const images = Array.from(e.querySelectorAll('.AdaptiveMedia')).map((e) => {
-						return Array.from(e.querySelectorAll('img'));
-					}).reduce((a, b) => {
-						return a.concat(b);
-					}, []).map((e) => {
-						return `${e.getAttribute('src')}:orig`;
-					});
+				tweets = await page.evaluate((_) => {
+					return Array.from(document.querySelectorAll('.stream-items > .stream-item')).map((e) => {
+						const permalink = e.querySelector('.js-permalink')!;
+						const link = permalink.getAttribute('href')!;
+						const images = Array.from(e.querySelectorAll('.AdaptiveMedia')).map((e) => {
+							return Array.from(e.querySelectorAll('img'));
+						}).reduce((a, b) => {
+							return a.concat(b);
+						}, []).map((e) => {
+							return `${e.getAttribute('src')}:orig`;
+						});
 
-					return {
-						'id': link.split('/').pop(),
-						'link': `https://twitter.com${link}`,
-						'images': images,
-					};
-				}).reverse();
-			});
+						return {
+							'id': link.split('/').pop(),
+							'link': `https://twitter.com${link}`,
+							'images': images,
+						};
+					}).reverse();
+				});
 
-			console.log(`tweets ${tweets.length}`);
+				console.log(`tweets: ${tweets.length}`);
 
-			const hasTweet = tweets.some((tweet) => {
-				return ids.indexOf(tweet.id!) !== -1;
-			});
-			console.log(`has tweet ${hasTweet}`);
-			if(hasTweet) {
-				shouldScroll = false;
-				break;
-			}
+				const hasTweet = tweets.some((tweet) => {
+					return ids.indexOf(tweet.id!) !== -1;
+				});
+				if(hasTweet) {
+					shouldScroll = false;
+					break;
+				}
 
-			try {
-				await page.focus('.has-more-items');
+				try {
+					await page.focus('.has-more-items');
 
-				if(prevLength === tweets.length) {
-					if(count > 30) {
-						shouldScroll = false;
-						break;
+					if(prevLength === tweets.length) {
+						if(count > 30) {
+							shouldScroll = false;
+							break;
+						}
+						await sleep(1000);
+						++count;
 					}
-					await sleep(1000);
-					++count;
+				}
+				catch(err) {
+					shouldScroll = false;
 				}
 			}
-			catch(err) {
-				shouldScroll = false;
-			}
+			while(shouldScroll);
 		}
-		while(shouldScroll);
 
 		await sleep(500);
 
-		const spreadsheet = GoogleSpreadsheets.getInstance();
+		{
+			const spreadsheet = GoogleSpreadsheets.getInstance();
 
-		tweets = tweets.filter((tweet) => {
-			if(tweet.id === null) {
-				return true;
-			}
-			return ids.indexOf(tweet.id) === -1;
-		}).sort((a, b) => {
-			if(a.id.length === b.id.length) {
-				return a.id.localeCompare(b.id);
-			}
-			return a.id.length > b.id.length ? 1 : -1;
-		});
+			tweets = tweets.filter((tweet) => {
+				if(tweet.id === null) {
+					return true;
+				}
+				return ids.indexOf(tweet.id) === -1;
+			}).sort((a, b) => {
+				if(a.id.length === b.id.length) {
+					return a.id.localeCompare(b.id);
+				}
+				return a.id.length > b.id.length ? 1 : -1;
+			});
 
-		console.log(tweets.length);
+			const images = tweets.map((tweet) => {
+				return tweet.images;
+			}).reduce((a, b) => {
+				return a.concat(b);
+			}, []);
+			console.log(`tweets: ${tweets.length}`);
+			console.log(`images: ${images.length}`);
 
-		for(const tweet of tweets) {
-			for(const image of tweet.images) {
-				console.log(`${image}`);
-				await download(alias, image);
+			let count = 1;
+			const digitCount = `${images.length}`.length;
+			for(const tweet of tweets) {
+				for(const image of tweet.images) {
+					const index = `${count}`.padStart(digitCount, '0');
+					console.log(`[${index}/${images.length}] ${image}`);
+					await download(alias, image);
+					++count;
+				}
+				await spreadsheet.appendUserTweets(screen_name, [
+					[
+						tweet.id,
+						tweet.link,
+						JSON.stringify(tweet.images),
+						(new Date()).toLocaleString(),
+					],
+				]);
 			}
-			await spreadsheet.appendUserTweets(screen_name, [
-				[
-					tweet.id,
-					tweet.link,
-					JSON.stringify(tweet.images),
-					(new Date()).toLocaleString(),
-				],
-			]);
 		}
 
 		await page.close();

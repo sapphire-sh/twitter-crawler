@@ -7,6 +7,8 @@ import {
 	OAuth2Client,
 } from 'google-auth-library';
 
+import Twit from 'twit';
+
 import {
 	Processor,
 } from '../libs/Processor';
@@ -16,7 +18,6 @@ import {
 	Manifest,
 	Sheet,
 	Coordinates,
-	User,
 } from '../models';
 
 export class GoogleSpreadsheets extends Processor {
@@ -188,7 +189,7 @@ export class GoogleSpreadsheets extends Processor {
 		await this.appendSheet('users!A2:H', values);
 	}
 
-	public async updateUser(coordinates: Coordinates, user: User): Promise<void> {
+	public async updateUser(coordinates: Coordinates, user: Twit.Twitter.User): Promise<void> {
 		const values = [
 			[
 				JSON.stringify(user),

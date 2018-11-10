@@ -1,4 +1,5 @@
 export * from './Command';
+export * from './Database';
 export * from './GoogleAuth';
 export * from './GoogleDrive';
 export * from './GoogleSpreadsheets';

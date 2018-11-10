@@ -12,7 +12,6 @@ import {
 	Command,
 	CommandType,
 	Manifest,
-	User,
 } from '../models';
 
 export class Twitter extends Processor {
@@ -71,13 +70,13 @@ export class Twitter extends Processor {
 		console.log(res);
 	}
 
-	public async getUser(id: string): Promise<User> {
+	public async getUser(id: string): Promise<Twit.Twitter.User> {
 		const {
 			data,
 		} = await this.twit.get('users/show', {
 			'user_id': id,
 		});
-		return data as User;
+		return data as Twit.Twitter.User;
 	}
 
 	public async getUserTweets(userID: string) {

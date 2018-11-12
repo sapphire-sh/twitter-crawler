@@ -35,8 +35,14 @@ export class GoogleAuth<T extends CredentialsType> {
 
 	public async initialize(): Promise<OAuth2Client | null> {
 		try {
-			const credentialsPath = path.resolve(this.credentialsPath);
-			const credentials = await readJSON(credentialsPath);
+			await fsPromises.lstat(this.tokensPath);
+		}
+		catch(err) {
+			await fsPromises.mkdir(this.tokensPath);
+		}
+
+		try {
+			const credentials = await readJSON(this.credentialsPath);
 			return this.authorize(credentials);
 		}
 		catch(err) {

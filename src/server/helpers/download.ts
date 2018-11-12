@@ -3,9 +3,10 @@ import path from 'path';
 
 import request from 'request';
 
+export const dataPath = path.resolve(__dirname, '../../../data');
+
 export async function download(name: string, url: string) {
 	const filename = url.split('/').pop()!.split(':').shift()!;
-	const dataPath = path.resolve(__dirname, '../../../data');
 	const artistPath = path.resolve(dataPath, name.replace(/\//g, '_'));
 	try {
 		await fs.statSync(artistPath);

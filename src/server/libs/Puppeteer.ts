@@ -1,3 +1,7 @@
+import {
+	promises as fsPromises,
+} from 'fs';
+
 import path from 'path';
 
 import puppeteer from 'puppeteer';
@@ -16,6 +20,7 @@ import {
 } from '../models';
 
 import {
+	dataPath,
 	download,
 	sleep,
 } from '../helpers';
@@ -63,7 +68,18 @@ export class Puppeteer extends Processor {
 			password,
 		} = this.manifest;
 
-		this.browser = await puppeteer.launch();
+		try {
+			await fsPromises.lstat(dataPath);
+		}
+		catch(err) {
+			await fsPromises.mkdir(dataPath);
+		}
+
+		this.browser = await puppeteer.launch({
+			'args': [
+				'--no-sandbox',
+			],
+		});
 		const page = await this.browser.newPage();
 		await page.goto('https://twitter.com/login', {
 			'waitUntil': 'domcontentloaded',

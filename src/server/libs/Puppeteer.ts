@@ -63,9 +63,7 @@ export class Puppeteer extends Processor {
 			password,
 		} = this.manifest;
 
-		this.browser = await puppeteer.launch({
-			'headless': false,
-		});
+		this.browser = await puppeteer.launch();
 		const page = await this.browser.newPage();
 		await page.goto('https://twitter.com/login', {
 			'waitUntil': 'domcontentloaded',

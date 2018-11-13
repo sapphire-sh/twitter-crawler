@@ -2,4 +2,7 @@
 
 set -ex
 
-docker build -f ./Dockerfile -t twitter-crawler .
+docker build \
+	-f ./Dockerfile \
+	-t twitter-crawler \
+	.

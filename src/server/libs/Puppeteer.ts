@@ -76,6 +76,7 @@ export class Puppeteer extends Processor {
 		}
 
 		this.browser = await puppeteer.launch({
+			'headless': __dev ? false : true,
 			'args': [
 				'--no-sandbox',
 			],
@@ -259,32 +260,59 @@ export class Puppeteer extends Processor {
 				return a.id.length > b.id.length ? 1 : -1;
 			});
 
-			const images = tweets.map((tweet) => {
+			const imagesLength = tweets.map((tweet) => {
 				return tweet.images;
 			}).reduce((a, b) => {
 				return a.concat(b);
-			}, []);
+			}, []).length;
 			console.log(`tweets: ${tweets.length}`);
-			console.log(`images: ${images.length}`);
+			console.log(`images: ${imagesLength}`);
 
 			let count = 1;
-			const digitCount = `${images.length}`.length;
-			for(const tweet of tweets) {
-				for(const image of tweet.images) {
+			const digitCount = `${imagesLength}`.length;
+			do {
+				console.log(tweets.length);
+
+				const queue = tweets.splice(0, 10);
+
+				const images = queue.map((tweet) => {
+					return tweet.images;
+				}).reduce((a, b) => {
+					return a.concat(b);
+				}, []);
+
+				for(const image of images) {
 					const index = `${count}`.padStart(digitCount, '0');
-					console.log(`[${index}/${images.length}] ${image}`);
-					await download(alias, image);
+					console.log(`[${index}/${imagesLength}] ${image}`);
+
+					let retryCount = 0;
+					do {
+						try {
+							await download(alias, image);
+							retryCount = -1;
+						}
+						catch(error) {
+							console.log(error);
+							console.log(`retry ${++retryCount}`);
+							await sleep(1000);
+						}
+					}
+					while(retryCount > -1);
+
 					++count;
 				}
-				await spreadsheet.appendUserTweets(screen_name, [
-					[
+
+				const values = queue.map((tweet) => {
+					return [
 						tweet.id,
 						tweet.link,
 						JSON.stringify(tweet.images),
 						(new Date()).toLocaleString(),
-					],
-				]);
+					];
+				});
+				await spreadsheet.appendUserTweets(screen_name, values);
 			}
+			while(tweets.length > 0);
 		}
 
 		await page.close();

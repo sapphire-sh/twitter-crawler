@@ -5,6 +5,8 @@
   "main": "./src/main.js",
   "scripts": {
     "build": "webpack",
+    "build:dev": "cross-env NODE_ENV=development npm run build",
+    "build:prod": "cross-env NODE_ENV=production npm run build",
     "start": "node ./dist/main.js"
   },
   "repository": {
@@ -27,6 +29,7 @@
     "@types/puppeteer": "^1.9.1",
     "@types/request": "^2.48.0",
     "@types/twit": "^2.2.20",
+    "cross-env": "^5.2.0",
     "file-loader": "^2.0.0",
     "sqlite3": "^4.0.4",
     "ts-loader": "^5.2.2",

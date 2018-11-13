@@ -23,7 +23,8 @@ import {
 } from './helpers';
 
 const DRIVE_ID = '1LBftZfGtRYSfNF0azqN3t0u1dNPy05ta';
-const SHEETS_ID = '1u8gCPBQB_iWFN-bYJzRBOhOUQ6krwNG51GI_kEKQfCc';
+// const SHEETS_ID = '1u8gCPBQB_iWFN-bYJzRBOhOUQ6krwNG51GI_kEKQfCc';
+const SHEETS_ID = '1onu1khkpaS-L4kOKXxpB8cGtndvlFpp0c1qQHSgyZ3c';
 
 export class App {
 	private static instance: App | null = null;

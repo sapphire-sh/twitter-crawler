@@ -119,31 +119,31 @@ export class App {
 		// 		await this.process(command);
 		// 	}
 
-		// {
-		// 	const spreadsheets = await GoogleSpreadsheets.getInstance();
-		// 	const twitter = Twitter.getInstance();
+		{
+			const spreadsheets = await GoogleSpreadsheets.getInstance();
+			const twitter = Twitter.getInstance();
 
-		// 	{
-		// 		const ids = await twitter.getFollowings();
-		// 		await spreadsheets.appendUsers(ids);
-		// 	}
+			{
+				const ids = await twitter.getFollowings();
+				await spreadsheets.appendUsers(ids);
+			}
 
-		// 	{
-		// 		const sheet = await spreadsheets.getUsers();
-		// 		if(sheet === null) {
-		// 			return;
-		// 		}
-		// 		const users = sheet.data.filter((user) => {
-		// 			return user.data === undefined;
-		// 		});
+			{
+				const sheet = await spreadsheets.getUsers();
+				if(sheet === null) {
+					return;
+				}
+				const users = sheet.data.filter((user) => {
+					return user.data === undefined;
+				});
 
-		// 		for(const user of users) {
-		// 			const data = await twitter.getUser(user.id);
-		// 			await spreadsheets.updateUser(user, data);
-		// 			await sleep(300);
-		// 		}
-		// 	}
-		// }
+				for(const user of users) {
+					const data = await twitter.getUser(user.id);
+					await spreadsheets.updateUser(user, data);
+					await sleep(300);
+				}
+			}
+		}
 
 		{
 			const spreadsheets = await GoogleSpreadsheets.getInstance();
@@ -180,6 +180,8 @@ export class App {
 				await spreadsheets.updateUserFlag(user);
 				await sleep(1000);
 			}
+
+			await puppeteer.close();
 		}
 	}
 }

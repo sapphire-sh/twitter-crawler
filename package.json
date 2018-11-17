@@ -7,7 +7,8 @@
     "build": "webpack",
     "build:dev": "cross-env NODE_ENV=development npm run build",
     "build:prod": "cross-env NODE_ENV=production npm run build",
-    "start": "node ./dist/main.js"
+    "start": "node ./dist/main.js",
+    "start:dev": "cross-env HOSTNAME=localhost npm run start"
   },
   "repository": {
     "type": "git",
@@ -27,11 +28,10 @@
     "@types/knex": "^0.15.0",
     "@types/node": "^10.12.0",
     "@types/puppeteer": "^1.9.1",
-    "@types/request": "^2.48.0",
+    "@types/request": "^2.48.1",
     "@types/twit": "^2.2.20",
     "cross-env": "^5.2.0",
     "file-loader": "^2.0.0",
-    "sqlite3": "^4.0.4",
     "ts-loader": "^5.2.2",
     "ts-node": "^7.0.1",
     "tslint": "^5.11.0",
@@ -44,6 +44,7 @@
     "express": "^4.16.4",
     "googleapis": "^34.0.0",
     "knex": "^0.15.2",
+    "mysql": "^2.16.0",
     "puppeteer": "^1.9.0",
     "request": "^2.88.0",
     "twit": "^2.2.11"

@@ -1,5 +1,7 @@
 FROM node:11
 
+ARG hostname=hostname
+
 RUN apt-get update
 RUN apt-get install -y \
 	libx11-xcb1 \
@@ -10,6 +12,8 @@ RUN apt-get install -y \
 	libatk-bridge2.0-0 \
 	libgtk-3-0
 RUN rm -rf /var/lib/apt/lists/*
+
+ENV HOSTNAME=${hostname}
 
 RUN mkdir /opt/src
 WORKDIR /opt/src

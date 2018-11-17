@@ -4,8 +4,7 @@ import {
 	GoogleDrive,
 	GoogleSpreadsheets,
 	Puppeteer,
-	Server,
-	Twitter,
+	TweetDeck,
 } from './libs';
 
 import {
@@ -16,6 +15,7 @@ import {
 	Command,
 	ProcessorType,
 	CredentialsType,
+	DatabaseUserQueryType,
 } from './models';
 
 import {
@@ -23,8 +23,7 @@ import {
 } from './helpers';
 
 const DRIVE_ID = '1LBftZfGtRYSfNF0azqN3t0u1dNPy05ta';
-// const SHEETS_ID = '1u8gCPBQB_iWFN-bYJzRBOhOUQ6krwNG51GI_kEKQfCc';
-const SHEETS_ID = '1onu1khkpaS-L4kOKXxpB8cGtndvlFpp0c1qQHSgyZ3c';
+const SHEETS_ID = '1u8gCPBQB_iWFN-bYJzRBOhOUQ6krwNG51GI_kEKQfCc';
 
 export class App {
 	private static instance: App | null = null;
@@ -49,36 +48,47 @@ export class App {
 	}
 
 	public async initialize() {
-		{
-			Server.createInstance();
-		}
+		// {
+		// 	const googleAuth = new GoogleAuth(CredentialsType.SPREADSHEETS);
+		// 	const auth = await googleAuth.initialize();
+		// 	if(auth === null) {
+		// 		return;
+		// 	}
+		// 	GoogleSpreadsheets.createInstance(auth, SHEETS_ID);
+		// }
+
+		// {
+		// 	const spreadsheets = GoogleSpreadsheets.getInstance();
+		// 	const manifest = await spreadsheets.getManifest();
+
+		// 	Puppeteer.createInstance(manifest);
+		// 	Database.createInstance({
+		// 		'client': 'mysql',
+		// 		'connection': {
+		// 			'host': process.env.HOSTNAME,
+		// 			'user': 'sapphire',
+		// 			'password': manifest.database_password,
+		// 			'database': 'twitter-crawler',
+		// 		},
+		// 	});
+		// }
 
 		{
-			const googleAuth = new GoogleAuth(CredentialsType.SPREADSHEETS);
-			const auth = await googleAuth.initialize();
-			if(auth === null) {
-				return;
-			}
-			GoogleSpreadsheets.createInstance(auth, SHEETS_ID);
+			const database = Database.getInstance();
+			await database.initialize();
 		}
 
-	// 	{
-	// 		const googleAuth = new GoogleAuth(CredentialsType.DRIVE);
-	// 		const auth = await googleAuth.initialize();
-	// 		if(auth === null) {
-	// 			return;
-	// 		}
-	// 		GoogleDrive.createInstance(auth, DRIVE_ID);
-	// 	}
+		// {
+		// 	const puppeteer = Puppeteer.getInstance();
+		// 	const config = await puppeteer.initialize();
 
-		{
-			const manifest = await GoogleSpreadsheets.getInstance().getManifest();
-			Twitter.createInstance(manifest);
-			Puppeteer.createInstance(manifest);
+		// 	TweetDeck.createInstance(config);
+		// }
 
-			const puppeteer = Puppeteer.getInstance();
-			await puppeteer.initialize();
-		}
+		// {
+		// 	const puppeteer = Puppeteer.getInstance();
+		// 	await puppeteer.close();
+		// }
 	}
 
 	private getProcessor(type: ProcessorType): Processor | null {
@@ -87,8 +97,6 @@ export class App {
 			return GoogleDrive.getInstance();
 		case ProcessorType.SPREADSHEETS:
 			return GoogleSpreadsheets.getInstance();
-		case ProcessorType.TWITTER:
-			return Twitter.getInstance();
 		default:
 			return null;
 		}
@@ -113,75 +121,57 @@ export class App {
 	public async start() {
 		this.shouldProcess = true;
 
+		const database = Database.getInstance();
+		// const tweetdeck = TweetDeck.getInstance();
+
 		// while(this.shouldProcess === true) {
 		// 	if(this.queue.length > 0) {
 		// 		const command = this.queue.shift()!;
 		// 		await this.process(command);
 		// 	}
 
-		{
-			const spreadsheets = await GoogleSpreadsheets.getInstance();
-			const twitter = Twitter.getInstance();
+		// {
+		// 	const ids = await tweetdeck.getUserIDs();
+		// 	console.log(`user ids fetched: ${ids.length}`);
 
-			{
-				const ids = await twitter.getFollowings();
-				await spreadsheets.appendUsers(ids);
-			}
+		// 	await database.insertUsers(ids);
+		// 	await sleep(50);
+		// }
 
-			{
-				const sheet = await spreadsheets.getUsers();
-				if(sheet === null) {
-					return;
-				}
-				const users = sheet.data.filter((user) => {
-					return user.data === undefined;
-				});
+		// {
+		// 	const users = await database.selectUsers(DatabaseUserQueryType.DATABASE_USER_QUERY_WITHOUT_NAME);
 
-				for(const user of users) {
-					const data = await twitter.getUser(user.id);
-					await spreadsheets.updateUser(user, data);
-					await sleep(300);
-				}
-			}
-		}
+		// 	for(const user of users) {
+		// 		const res = await tweetdeck.getUser(user.id);
 
-		{
-			const spreadsheets = await GoogleSpreadsheets.getInstance();
-			const sheet = await spreadsheets.getUsers();
-			if(sheet === null) {
-				return;
-			}
-			const users = sheet.data.filter((user) => {
-				if(user.alias === undefined) {
-					return false;
-				}
-				if(user.crawled_at !== undefined) {
-					return false;
-				}
-				return true;
-			});
+		// 		const {
+		// 			screen_name,
+		// 			name,
+		// 		} = res;
 
-			const puppeteer = Puppeteer.getInstance();
+		// 		console.log(`user fetched: ${name} ${screen_name}`);
 
-			for(const user of users) {
-				console.log(`${user.alias} @${user.screen_name}`);
-				let sheet = await spreadsheets.getUserSheet(user.screen_name);
-				if(sheet === null) {
-					await spreadsheets.createUserSheet(user.screen_name);
-					sheet = await spreadsheets.getUserSheet(user.screen_name);
-				}
-				if(sheet === null) {
-					return;
-				}
-				const ids = sheet.data.map((e) => {
-					return e.id;
-				}).sort();
-				await puppeteer.crawlUser(user.screen_name, user.alias, ids);
-				await spreadsheets.updateUserFlag(user);
-				await sleep(1000);
-			}
+		// 		await database.updateUser({
+		// 			'id': user.id,
+		// 			'screen_name': screen_name,
+		// 			'name': name,
+		// 		});
 
-			await puppeteer.close();
-		}
+		// 		await sleep(100);
+		// 	}
+		// }
+
+		await database.insertUsers(Array.from(Array(10)).map((_, i) => {
+			return `${i}`;
+		}));
+
+		await sleep(50);
+
+		await database.updateUser({
+			'id': '1',
+			'name': 'カイシンシ月東イｰ２３a🍆',
+		});
+
+		await database.close();
 	}
 }

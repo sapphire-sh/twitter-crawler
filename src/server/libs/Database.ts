@@ -24,6 +24,10 @@ import {
 	Manifest,
 } from '../models';
 
+import {
+	convertToBase64,
+} from '../helpers';
+
 export class Database extends Processor {
 	private static instance: Database | null = null;
 
@@ -121,7 +125,7 @@ export class Database extends Processor {
 			return entityManager.create(TweetEntity, {
 				'id': tweet.id_str,
 				'user_id': tweet.user.id_str,
-				'data': JSON.stringify(tweet),
+				'data': convertToBase64(JSON.stringify(tweet)),
 			});
 		}));
 	}

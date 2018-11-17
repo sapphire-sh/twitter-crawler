@@ -27,7 +27,11 @@ export class Sheet<T> {
 			throw new Error('invalid schema');
 		}
 		if(range === undefined || values === undefined) {
-			throw new Error('invalid data');
+			this.sheet = [
+				[],
+			];
+			this.data = [];
+			return;
 		}
 
 		const [

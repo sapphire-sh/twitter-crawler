@@ -14,6 +14,10 @@ import {
 } from '../libs/Processor';
 
 import {
+	UserEntity,
+} from '../entities';
+
+import {
 	Command,
 	Manifest,
 	Sheet,
@@ -159,7 +163,12 @@ export class GoogleSpreadsheets extends Processor {
 		return this.getSheet<any>(`@${name}!A1:D`);
 	}
 
-	public async getUsers(): Promise<Sheet<any> | null> {
+	public async getUsers(): Promise<Sheet<{
+		id: string;
+		alias: string;
+		name: string;
+		screen_name: string;
+	}> | null> {
 		try {
 			return this.getSheet<any>('users!A2:H');
 		}
@@ -169,37 +178,33 @@ export class GoogleSpreadsheets extends Processor {
 		}
 	}
 
-	public async appendUsers(ids: string[]): Promise<void> {
+	public async appendUsers(users: UserEntity[]): Promise<void> {
 		const sheet = await this.getUsers();
 		if(sheet === null) {
 			return;
 		}
 
-		const values = ids.filter((id) => {
-			const user = sheet.find((user) => {
-				return user.id === id;
-			});
-			return user === null;
-		}).map((id) => {
+		const values = users.map((user) => {
 			return [
-				id,
+				user.id,
+				'',
+				user.name,
+				user.screen_name,
 			];
 		});
 
-		await this.appendSheet('users!A2:H', values);
+		await this.appendSheet('users!A2:D', values);
 	}
 
 	public async updateUser(coordinates: Coordinates, user: Twit.Twitter.User): Promise<void> {
 		const values = [
 			[
-				JSON.stringify(user),
-				user.screen_name,
 				user.name,
-				user.created_at,
+				user.screen_name,
 				(new Date()).toLocaleString(),
 			],
 		];
-		await this.updateSheet(`users!C${coordinates.y}:G${coordinates.y}`, values);
+		await this.updateSheet(`users!C${coordinates.y}:D${coordinates.y}`, values);
 	}
 
 	public async updateUserFlag(coordinates: Coordinates): Promise<void> {

@@ -1,13 +1,22 @@
-import Knex from 'knex';
+import {
+	createConnection,
+	getManager,
+	Connection,
+	ConnectionOptions,
+	EntityManager,
+} from 'typeorm';
 
 import {
 	Processor,
 } from './Processor';
 
 import {
+	UserEntity,
+} from '../entities';
+
+import {
 	Command,
-	DatabaseUserQueryType,
-	UserSchema,
+	Manifest,
 } from '../models';
 
 enum Tables {
@@ -19,19 +28,18 @@ enum Tables {
 export class Database extends Processor {
 	private static instance: Database | null = null;
 
-	private knex: Knex;
+	private connection: Connection | null = null;
+	private entityManager: EntityManager | null = null;
 
-	private constructor(config: Knex.Config) {
+	private constructor() {
 		super();
-
-		this.knex = Knex(config);
 	}
 
-	public static createInstance(config: Knex.Config) {
+	public static createInstance() {
 		if(this.instance !== null) {
 			throw new Error('database instance is already created');
 		}
-		this.instance = new Database(config);
+		this.instance = new Database();
 	}
 
 	public static getInstance(): Database {
@@ -45,119 +53,124 @@ export class Database extends Processor {
 		console.log(command);
 	}
 
-	private async initializeTable<T extends Tables>(tableName: T) {
-		const exists = await this.knex.schema.hasTable(tableName);
-		if(exists) {
-			return;
-		}
-		await this.knex.schema.createTable(tableName, (table) => {
-			table.bigInteger('id').primary().index().unique();
-			switch(tableName) {
-				case Tables.TABLE_USERS:
-					table.string('alias').notNullable().defaultTo('');
-					table.string('name').notNullable().defaultTo('');
-					table.string('screen_name').notNullable().defaultTo('');
-					table.integer('crawled_at').notNullable().defaultTo(0);
-					break;
-				case Tables.TABLE_TWEETS:
-					table.bigInteger('user_id').notNullable();
-					table.string('link').notNullable();
-					break;
-				case Tables.TABLE_MEDIAS:
-					table.bigInteger('tweet_id').notNullable();
-					break;
-			}
-			table.timestamps(true, true);
-		});
+	// private async initializeTable<T extends Tables>(tableName: T) {
+	// 	const exists = await this.knex.schema.hasTable(tableName);
+	// 	if(exists) {
+	// 		return;
+	// 	}
+	// 	await this.knex.schema.createTable(tableName, (table) => {
+	// 		table.bigInteger('id').primary().index().unique();
+	// 		switch(tableName) {
+	// 			case Tables.TABLE_USERS:
+	// 				table.string('alias').notNullable().defaultTo('');
+	// 				table.string('name').notNullable().defaultTo('');
+	// 				table.string('screen_name').notNullable().defaultTo('');
+	// 				table.integer('crawled_at').notNullable().defaultTo(0);
+	// 				break;
+	// 			case Tables.TABLE_TWEETS:
+	// 				table.bigInteger('user_id').notNullable();
+	// 				table.string('link').notNullable();
+	// 				break;
+	// 			case Tables.TABLE_MEDIAS:
+	// 				table.bigInteger('tweet_id').notNullable();
+	// 				break;
+	// 		}
+	// 		table.timestamps(true, true);
+	// 	});
+	// }
+
+	public async initialize(manifest: Manifest) {
+		const options: ConnectionOptions = {
+			'type': 'mysql',
+			'host': process.env.HOSTNAME,
+			'username': manifest.database_username,
+			'password': manifest.database_password,
+			'database': manifest.database_name,
+			'charset': 'utf8mb4_unicode_ci',
+			'entities': [
+				UserEntity,
+			],
+		};
+		this.connection = await createConnection(options);
+		this.entityManager = getManager();
+
+		// for(const key in Tables) {
+		// 	if(isNaN(Number(key)) === false) {
+		// 		continue;
+		// 	}
+		// 	const value = Tables[key] as Tables;
+		// 	await this.initializeTable(value);
+		// }
 	}
 
-	public async initialize() {
-		for(const key in Tables) {
-			if(isNaN(Number(key)) === false) {
-				continue;
-			}
-			const value = Tables[key] as Tables;
-			await this.initializeTable(value);
-		}
-	}
+	// private async select<T extends Tables>(tableName: T, id: string) {
+	// 	const ids = await this.knex(tableName).where({
+	// 		'id': id,
+	// 	}) as string[];
+	// 	return ids;
+	// }
 
-	private async select<T extends Tables>(tableName: T, id: string) {
-		const ids = await this.knex(tableName).where({
-			'id': id,
-		}) as string[];
-		return ids;
-	}
+	// private async update<T extends Tables>(tableName: T, data: any) {
+	// 	const id = data.id;
+	// 	delete data.id;
 
-	private async insert<T extends Tables>(tableName: T, data: any) {
-		await this.knex(tableName).insert(data);
-	}
-
-	private async update<T extends Tables>(tableName: T, data: any) {
-		const id = data.id;
-		delete data.id;
-
-		await this.knex(tableName).where({
-			'id': id,
-		}).update(data);
-	}
+	// 	await this.knex(tableName).where({
+	// 		'id': id,
+	// 	}).update(data);
+	// }
 
 	public async insertUsers(ids: string[]) {
-		const tableName = Tables.TABLE_USERS;
+		const entityManager = this.entityManager;
+
+		if(entityManager === null) {
+			throw new Error(`entity manager is null`);
+		}
 
 		const filteredIDs: string[] = [];
 		for(const id of ids) {
-			const rows = await this.select(tableName, id);
-			if(rows.length > 0) {
+			const user = await entityManager.findOne(UserEntity, id);
+			if(user !== undefined) {
 				continue;
 			}
 			filteredIDs.push(id);
 		}
 
 		console.log(`user ids to insert: ${filteredIDs.length}`);
-		await this.insert(tableName, filteredIDs.map((id) => {
-			return {
+		await entityManager.save(filteredIDs.map((id) => {
+			return entityManager.create(UserEntity, {
 				'id': id,
-			};
+			});
 		}));
 	}
 
-	public async selectUsers(type: DatabaseUserQueryType): Promise<UserSchema[]> {
-		const builder = this.knex(Tables.TABLE_USERS);
+	public async selectUsers(): Promise<UserEntity[]> {
+		const entityManager = this.entityManager;
 
-		switch(type) {
-			case DatabaseUserQueryType.DATABASE_USER_QUERY_WITHOUT_ALIAS:
-				return builder.where({
-					'alias': '',
-				});
-			case DatabaseUserQueryType.DATABASE_USER_QUERY_WITHOUT_NAME:
-				return builder.where({
-					'name': '',
-				});
-			case DatabaseUserQueryType.DATABASE_USER_QUERY_FOR_CRAWL:
-				const threshold = Date.now() - 7 * 24 * 60 * 60 * 1000;
-				return builder.whereNot({
-					'alias': '',
-				}).andWhere('crawled_at', '<=', threshold);
+		if(entityManager === null) {
+			throw new Error(`entity manager is null`);
 		}
+
+		return entityManager.find(UserEntity);
 	}
 
-	public async updateUser(user: Partial<UserSchema> & {
+	public async updateUser(user: Partial<UserEntity> & {
 		id: string;
 	}) {
-		const tableName = Tables.TABLE_USERS;
+		const entityManager = this.entityManager;
 
-		const {
-			id,
-		} = user;
-
-		const rows = await this.select(tableName, id);
-		if(rows.length === 0) {
-			return;
+		if(entityManager === null) {
+			throw new Error(`entity manager is null`);
 		}
-		await this.update(tableName, user);
+
+		await entityManager.update(UserEntity, user.id, {
+			...user,
+		});
 	}
 
 	public async close() {
-		await this.knex.destroy();
+		if(this.connection === null) {
+			return;
+		}
+		await this.connection.close();
 	}
 }

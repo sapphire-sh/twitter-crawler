@@ -190,21 +190,28 @@ export class App {
 
 			let shouldProcess = true;
 			do {
-				const tweet = await database.selectTweet(user.id);
+				try {
+					const tweet = await database.selectTweet(user.id);
 
-				const maxID = tweet === null ? undefined : tweet.id;
-				const tweets = await tweetdeck.getTweets(user.screen_name, maxID);
+					const maxID = tweet === null ? undefined : tweet.id;
 
-				if(tweets.length <= 1) {
-					shouldProcess = false;
-					break;
+					const tweets = await tweetdeck.getTweets(user.screen_name, maxID);
+
+					if(tweets.length <= 1) {
+						shouldProcess = false;
+						break;
+					}
+
+					console.log(tweets[0].id_str);
+
+					await database.insertTweets(tweets);
+
+					await sleep(500);
 				}
-
-				console.log(tweets[0].id_str);
-
-				await database.insertTweets(tweets);
-
-				await sleep(500);
+				catch(err) {
+					console.log(err);
+					continue;
+				}
 			}
 			while(shouldProcess);
 

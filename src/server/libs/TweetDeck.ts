@@ -1,7 +1,5 @@
 import request from 'request';
 
-import Twit from 'twit';
-
 import {
 	Processor,
 } from './Processor';
@@ -9,7 +7,8 @@ import {
 import {
 	Command,
 	TweetDeckConfig,
-	TweetDeckResponseType,
+	TweetDeckRequestType,
+	TweetDeckFetchRateLimitStatusResponse,
 	TweetDeckFetchUserIDsResponse,
 	TweetDeckFetchUserResponse,
 	TweetDeckFetchUserTweetsResponse,
@@ -57,10 +56,11 @@ export class TweetDeck extends Processor {
 		}).join('&')}`;
 	}
 
-	private async sendRequest(type: TweetDeckResponseType.TWEETDECK_FETCH_USER_IDS, params?: any): Promise<TweetDeckFetchUserIDsResponse>;
-	private async sendRequest(type: TweetDeckResponseType.TWEETDECK_FETCH_USER, params?: any): Promise<TweetDeckFetchUserResponse>;
-	private async sendRequest(type: TweetDeckResponseType.TWEETDECK_FETCH_USER_TWEETS, params?: any): Promise<TweetDeckFetchUserTweetsResponse>;
-	private async sendRequest(type: TweetDeckResponseType, params?: any) {
+	private async sendRequest(type: TweetDeckRequestType.TWEETDECK_FETCH_RATE_LIMIT_STATUS): Promise<TweetDeckFetchRateLimitStatusResponse>;
+	private async sendRequest(type: TweetDeckRequestType.TWEETDECK_FETCH_USER_IDS, params?: any): Promise<TweetDeckFetchUserIDsResponse>;
+	private async sendRequest(type: TweetDeckRequestType.TWEETDECK_FETCH_USER, params?: any): Promise<TweetDeckFetchUserResponse>;
+	private async sendRequest(type: TweetDeckRequestType.TWEETDECK_FETCH_USER_TWEETS, params?: any): Promise<TweetDeckFetchUserTweetsResponse>;
+	private async sendRequest(type: TweetDeckRequestType, params?: any) {
 		const {
 			userAgent,
 			bearerToken,
@@ -102,8 +102,15 @@ export class TweetDeck extends Processor {
 		}).join(' ');
 	}
 
+	public async getRateLimitStatus() {
+		const type = TweetDeckRequestType.TWEETDECK_FETCH_RATE_LIMIT_STATUS;
+
+		const res = await this.sendRequest(type);
+		console.log(res);
+	}
+
 	public async getUserIDs() {
-		const type = TweetDeckResponseType.TWEETDECK_FETCH_USER_IDS;
+		const type = TweetDeckRequestType.TWEETDECK_FETCH_USER_IDS;
 		const params = {
 			'stringify_ids': true,
 		};
@@ -113,7 +120,7 @@ export class TweetDeck extends Processor {
 	}
 
 	public async getUser(id: string) {
-		const type = TweetDeckResponseType.TWEETDECK_FETCH_USER;
+		const type = TweetDeckRequestType.TWEETDECK_FETCH_USER;
 		const params = {
 			'user_id': id,
 		};
@@ -123,7 +130,7 @@ export class TweetDeck extends Processor {
 	}
 
 	public async getTweets(screenName: string, maxID?: string) {
-		const type = TweetDeckResponseType.TWEETDECK_FETCH_USER_TWEETS;
+		const type = TweetDeckRequestType.TWEETDECK_FETCH_USER_TWEETS;
 		const params = {
 			'q': this.getQuery(screenName, maxID),
 			'count': 500,

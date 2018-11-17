@@ -180,11 +180,41 @@ export class App {
 		}
 	}
 
-	public async start() {
-		this.shouldProcess = true;
-
+	private async fetchTweets() {
 		const database = Database.getInstance();
 		const tweetdeck = TweetDeck.getInstance();
+
+		const users = await database.selectUsers();
+		for(const user of users) {
+			console.log(`crawl user: ${user.screen_name}`);
+
+			let shouldProcess = true;
+			do {
+				const tweet = await database.selectTweet(user.id);
+
+				const maxID = tweet === null ? undefined : tweet.id;
+				const tweets = await tweetdeck.getTweets(user.screen_name, maxID);
+
+				if(tweets.length <= 1) {
+					shouldProcess = false;
+					break;
+				}
+
+				console.log(tweets[0].id_str);
+
+				await database.insertTweets(tweets);
+
+				await sleep(500);
+			}
+			while(shouldProcess);
+
+			await sleep(50);
+		}
+		await database.insertTweets([]);
+	}
+
+	public async start() {
+		this.shouldProcess = true;
 
 		do {
 			await this.addUsers();
@@ -196,10 +226,14 @@ export class App {
 			await this.syncUsers();
 			await sleep(50);
 
+			await this.fetchTweets();
+			await sleep(50);
+
 			await sleep(60 * 1000);
 		}
 		while(this.shouldProcess);
 
+		const database = Database.getInstance();
 		await database.close();
 	}
 }

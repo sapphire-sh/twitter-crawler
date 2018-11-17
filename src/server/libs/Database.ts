@@ -7,10 +7,15 @@ import {
 } from 'typeorm';
 
 import {
+	Twitter,
+} from 'twit';
+
+import {
 	Processor,
 } from './Processor';
 
 import {
+	TweetEntity,
 	UserEntity,
 } from '../entities';
 
@@ -18,12 +23,6 @@ import {
 	Command,
 	Manifest,
 } from '../models';
-
-enum Tables {
-	TABLE_USERS = 'users',
-	TABLE_TWEETS = 'tweets',
-	TABLE_MEDIAS = 'medias',
-}
 
 export class Database extends Processor {
 	private static instance: Database | null = null;
@@ -53,32 +52,6 @@ export class Database extends Processor {
 		console.log(command);
 	}
 
-	// private async initializeTable<T extends Tables>(tableName: T) {
-	// 	const exists = await this.knex.schema.hasTable(tableName);
-	// 	if(exists) {
-	// 		return;
-	// 	}
-	// 	await this.knex.schema.createTable(tableName, (table) => {
-	// 		table.bigInteger('id').primary().index().unique();
-	// 		switch(tableName) {
-	// 			case Tables.TABLE_USERS:
-	// 				table.string('alias').notNullable().defaultTo('');
-	// 				table.string('name').notNullable().defaultTo('');
-	// 				table.string('screen_name').notNullable().defaultTo('');
-	// 				table.integer('crawled_at').notNullable().defaultTo(0);
-	// 				break;
-	// 			case Tables.TABLE_TWEETS:
-	// 				table.bigInteger('user_id').notNullable();
-	// 				table.string('link').notNullable();
-	// 				break;
-	// 			case Tables.TABLE_MEDIAS:
-	// 				table.bigInteger('tweet_id').notNullable();
-	// 				break;
-	// 		}
-	// 		table.timestamps(true, true);
-	// 	});
-	// }
-
 	public async initialize(manifest: Manifest) {
 		const options: ConnectionOptions = {
 			'type': 'mysql',
@@ -88,43 +61,25 @@ export class Database extends Processor {
 			'database': manifest.database_name,
 			'charset': 'utf8mb4_unicode_ci',
 			'entities': [
+				TweetEntity,
 				UserEntity,
 			],
 		};
 		this.connection = await createConnection(options);
 		this.entityManager = getManager();
-
-		// for(const key in Tables) {
-		// 	if(isNaN(Number(key)) === false) {
-		// 		continue;
-		// 	}
-		// 	const value = Tables[key] as Tables;
-		// 	await this.initializeTable(value);
-		// }
 	}
 
-	// private async select<T extends Tables>(tableName: T, id: string) {
-	// 	const ids = await this.knex(tableName).where({
-	// 		'id': id,
-	// 	}) as string[];
-	// 	return ids;
-	// }
-
-	// private async update<T extends Tables>(tableName: T, data: any) {
-	// 	const id = data.id;
-	// 	delete data.id;
-
-	// 	await this.knex(tableName).where({
-	// 		'id': id,
-	// 	}).update(data);
-	// }
-
-	public async insertUsers(ids: string[]) {
+	private getEntityManager() {
 		const entityManager = this.entityManager;
 
 		if(entityManager === null) {
 			throw new Error(`entity manager is null`);
 		}
+		return entityManager;
+	}
+
+	public async insertUsers(ids: string[]) {
+		const entityManager = this.getEntityManager();
 
 		const filteredIDs: string[] = [];
 		for(const id of ids) {
@@ -144,11 +99,7 @@ export class Database extends Processor {
 	}
 
 	public async selectUsers(): Promise<UserEntity[]> {
-		const entityManager = this.entityManager;
-
-		if(entityManager === null) {
-			throw new Error(`entity manager is null`);
-		}
+		const entityManager = this.getEntityManager();
 
 		return entityManager.find(UserEntity);
 	}
@@ -156,15 +107,41 @@ export class Database extends Processor {
 	public async updateUser(user: Partial<UserEntity> & {
 		id: string;
 	}) {
-		const entityManager = this.entityManager;
-
-		if(entityManager === null) {
-			throw new Error(`entity manager is null`);
-		}
+		const entityManager = this.getEntityManager();
 
 		await entityManager.update(UserEntity, user.id, {
 			...user,
 		});
+	}
+
+	public async insertTweets(tweets: Twitter.Status[]) {
+		const entityManager = this.getEntityManager();
+
+		await entityManager.save(tweets.map((tweet) => {
+			return entityManager.create(TweetEntity, {
+				'id': tweet.id_str,
+				'user_id': tweet.user.id_str,
+				'data': JSON.stringify(tweet),
+			});
+		}));
+	}
+
+	public async selectTweet(userID: string): Promise<TweetEntity | null> {
+		const entityManager = this.getEntityManager();
+
+		const tweet = await entityManager.findOne(TweetEntity, {
+			'where': {
+				'user_id': userID,
+			},
+			'order': {
+				'id': 'ASC',
+			},
+		});
+
+		if(tweet === undefined) {
+			return null;
+		}
+		return tweet;
 	}
 
 	public async close() {

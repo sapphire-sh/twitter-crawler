@@ -7,10 +7,37 @@ export interface TweetDeckConfig {
 	cookie: string;
 }
 
-export enum TweetDeckResponseType {
+export enum TweetDeckRequestType {
+	TWEETDECK_FETCH_RATE_LIMIT_STATUS = 'application/rate_limit_status',
 	TWEETDECK_FETCH_USER_IDS = 'friends/ids',
 	TWEETDECK_FETCH_USER = 'users/show',
 	TWEETDECK_FETCH_USER_TWEETS = 'search/universal',
+}
+
+interface RateLimitStatus {
+	limit: number;
+	remaining: number;
+	reset: number;
+}
+
+export interface TweetDeckFetchRateLimitStatusResponse {
+	rate_limit_context: {
+		access_token: string;
+	};
+	resources: {
+		application: {
+			'application/rate_limit_status': RateLimitStatus;
+		};
+		friends: {
+			'friends/ids': RateLimitStatus;
+		};
+		search: {
+			'/search/universal': RateLimitStatus;
+		};
+		users: {
+			'/users/show/:id': RateLimitStatus;
+		};
+	};
 }
 
 export interface TweetDeckFetchUserIDsResponse {

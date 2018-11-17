@@ -7,38 +7,24 @@ import {
 } from 'typeorm';
 
 @Entity({
-	'name': 'users',
+	'name': 'tweets',
 })
-export class UserEntity {
+export class TweetEntity {
 	@PrimaryColumn({
 		'type': 'bigint',
 	})
 	// @ts-ignore
 	public id: string;
 
-	@Column({
-		'default': '',
-	})
+	@Column()
 	// @ts-ignore
-	public alias: string;
+	public user_id: string;
 
 	@Column({
-		'default': '',
+		'type': 'text',
 	})
 	// @ts-ignore
-	public name: string;
-
-	@Column({
-		'default': '',
-	})
-	// @ts-ignore
-	public screen_name: string;
-
-	@Column({
-		'default': '0',
-	})
-	// @ts-ignore
-	public crawled_at: number;
+	public data: string;
 
 	@CreateDateColumn()
 	// @ts-ignore

@@ -10,7 +10,7 @@
     "start": "node ./dist/main.js",
     "start:dev": "cross-env HOSTNAME=localhost npm run start",
     "typeorm": "ts-node ./node_modules/.bin/typeorm",
-    "migration:generate": "npm run typeorm migration:generate -n PostRefactoring -d ./migrations",
+    "migration:generate": "npm run typeorm migration:generate -- -n PostRefactoring -d ./migrations",
     "migration:run": "npm run typeorm migration:run"
   },
   "repository": {

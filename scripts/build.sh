@@ -2,7 +2,7 @@
 
 set -ex
 
-HOSTNAME='172.0.0.1';
+HOSTNAME='172.17.0.1';
 if [[ "$OSTYPE" == "darwin"* ]];
 then
     HOSTNAME='host.docker.internal';

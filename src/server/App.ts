@@ -188,12 +188,14 @@ export class App {
 		for(const user of users) {
 			console.log(`crawl user: ${user.screen_name}`);
 
+			let maxID: string | undefined;
 			let shouldProcess = true;
 			do {
 				try {
-					const tweet = await database.selectTweet(user.id);
-
-					const maxID = tweet === null ? undefined : tweet.id;
+					if(maxID === undefined) {
+						const tweet = await database.selectTweet(user.id);
+						maxID = tweet === null ? undefined : tweet.id;
+					}
 
 					const tweets = await tweetdeck.getTweets(user.screen_name, maxID);
 					console.log(`max id: ${maxID}`);
@@ -205,6 +207,8 @@ export class App {
 					}
 
 					await database.insertTweets(tweets);
+
+					maxID = tweets[tweets.length - 1].id_str;
 
 					await sleep(200);
 				}

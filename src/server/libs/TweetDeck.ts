@@ -130,6 +130,7 @@ export class TweetDeck extends Processor {
 	}
 
 	public async getTweets(screenName: string, maxID?: string) {
+		console.time(`get tweets`);
 		const type = TweetDeckRequestType.TWEETDECK_FETCH_USER_TWEETS;
 		const params = {
 			'q': this.getQuery(screenName, maxID),
@@ -149,6 +150,7 @@ export class TweetDeck extends Processor {
 		};
 
 		const res = await this.sendRequest(type, params);
+		console.timeEnd(`get tweets`);
 		return res.modules.map((module) => {
 			return module.status.data;
 		});

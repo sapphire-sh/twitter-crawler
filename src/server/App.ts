@@ -196,17 +196,17 @@ export class App {
 					const maxID = tweet === null ? undefined : tweet.id;
 
 					const tweets = await tweetdeck.getTweets(user.screen_name, maxID);
+					console.log(`max id: ${maxID}`);
+					console.log(`tweets crawled: ${tweets.length}`);
 
 					if(tweets.length <= 1) {
 						shouldProcess = false;
 						break;
 					}
 
-					console.log(tweets[0].id_str);
-
 					await database.insertTweets(tweets);
 
-					await sleep(500);
+					await sleep(200);
 				}
 				catch(err) {
 					console.log(err);

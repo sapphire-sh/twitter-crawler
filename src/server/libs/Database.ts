@@ -119,6 +119,7 @@ export class Database extends Processor {
 	}
 
 	public async insertTweets(tweets: Twitter.Status[]) {
+		console.time(`insert tweets`);
 		const entityManager = this.getEntityManager();
 
 		await entityManager.save(tweets.map((tweet) => {
@@ -128,9 +129,11 @@ export class Database extends Processor {
 				'data': convertToBase64(JSON.stringify(tweet)),
 			});
 		}));
+		console.timeEnd(`insert tweets`);
 	}
 
 	public async selectTweet(userID: string): Promise<TweetEntity | null> {
+		console.time(`select tweet`);
 		const entityManager = this.getEntityManager();
 
 		const tweet = await entityManager.findOne(TweetEntity, {
@@ -142,6 +145,7 @@ export class Database extends Processor {
 			},
 		});
 
+		console.timeEnd(`select tweet`);
 		if(tweet === undefined) {
 			return null;
 		}

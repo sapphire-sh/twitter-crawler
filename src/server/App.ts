@@ -184,7 +184,11 @@ export class App {
 		const database = Database.getInstance();
 		const tweetdeck = TweetDeck.getInstance();
 
-		const users = await database.selectUsers();
+		const now = Date.now();
+
+		const users = (await database.selectUsers()).filter((user) => {
+			return now > user.crawled_at + 24 * 60 * 60 * 1000;
+		});
 		for(const user of users) {
 			console.log(`crawl user: ${user.screen_name}`);
 
@@ -193,8 +197,7 @@ export class App {
 			do {
 				try {
 					if(maxID === undefined) {
-						const tweet = await database.selectTweet(user.id);
-						maxID = tweet === null ? undefined : tweet.id;
+						maxID = await database.selectTweet(user.id);
 					}
 
 					const tweets = await tweetdeck.getTweets(user.screen_name, maxID);
@@ -214,14 +217,20 @@ export class App {
 				}
 				catch(err) {
 					console.log(err);
+					shouldProcess = true;
+					maxID = undefined;
 					continue;
 				}
 			}
 			while(shouldProcess);
 
+			await database.updateUser({
+				'id': user.id,
+				'crawled_at': Date.now(),
+			});
+
 			await sleep(50);
 		}
-		await database.insertTweets([]);
 	}
 
 	public async start() {

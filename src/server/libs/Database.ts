@@ -132,11 +132,14 @@ export class Database extends Processor {
 		console.timeEnd(`insert tweets`);
 	}
 
-	public async selectTweet(userID: string): Promise<TweetEntity | null> {
+	public async selectTweet(userID: string): Promise<string | undefined> {
 		console.time(`select tweet`);
 		const entityManager = this.getEntityManager();
 
 		const tweet = await entityManager.findOne(TweetEntity, {
+			'select': [
+				'id',
+			],
 			'where': {
 				'user_id': userID,
 			},
@@ -147,9 +150,9 @@ export class Database extends Processor {
 
 		console.timeEnd(`select tweet`);
 		if(tweet === undefined) {
-			return null;
+			return undefined;
 		}
-		return tweet;
+		return tweet.id;
 	}
 
 	public async close() {

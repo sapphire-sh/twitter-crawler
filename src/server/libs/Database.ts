@@ -156,6 +156,17 @@ export class Database extends Processor {
 		// 	},
 		// });
 
+		const sql = entityManager.createQueryBuilder()
+			.select('id')
+			.from(TweetEntity, 'tweets')
+			.where('tweets.user_id = :userID', {
+				'userID': userID,
+			})
+			.orderBy('tweets.id', 'ASC')
+			.limit(1)
+			.getSql();
+		console.log(sql);
+
 		const tweet = await entityManager.createQueryBuilder()
 			.select('id')
 			.from(TweetEntity, 'tweets')

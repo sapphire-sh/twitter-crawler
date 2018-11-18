@@ -87,7 +87,15 @@ export class Database extends Processor {
 
 		const filteredIDs: string[] = [];
 		for(const id of ids) {
-			const user = await entityManager.findOne(UserEntity, id);
+			const user = await entityManager
+				.createQueryBuilder()
+				.select('users.id')
+				.from(UserEntity, 'users')
+				.where('users.id = :id', {
+					'id': id,
+				})
+				.limit(1)
+				.getOne();
 			if(user !== undefined) {
 				continue;
 			}
@@ -148,17 +156,18 @@ export class Database extends Processor {
 		// 	},
 		// });
 
-		// const tweet = await entityManager.createQueryBuilder()
-		// 	.select('id')
-		// 	.from(TweetEntity, 'tweets')
-		// 	.where('tweets.user_id = :userID', {
-		// 		'userID': userID,
-		// 	})
-		// 	.orderBy('tweets.id', 'ASC')
-		// 	.getOne();
+		const tweet = await entityManager.createQueryBuilder()
+			.select('id')
+			.from(TweetEntity, 'tweets')
+			.where('tweets.user_id = :userID', {
+				'userID': userID,
+			})
+			.orderBy('tweets.id', 'ASC')
+			.limit(1)
+			.getOne();
 
-		const query = `select \`id\` from \`tweets\` where \`user_id\` = '${userID}' order by \`id\` asc limit 1`;
-		const tweet = await entityManager.query(query);
+		// const query = `select \`id\` from \`tweets\` where \`user_id\` = '${userID}' order by \`id\` asc limit 1`;
+		// const tweet = await entityManager.query(query);
 
 		console.timeEnd(`select tweet`);
 		if(tweet === undefined) {

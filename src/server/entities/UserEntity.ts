@@ -35,6 +35,7 @@ export class UserEntity {
 	public screen_name: string;
 
 	@Column({
+		'type': 'bigint',
 		'default': '0',
 	})
 	// @ts-ignore

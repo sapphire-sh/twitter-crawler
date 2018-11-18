@@ -136,17 +136,29 @@ export class Database extends Processor {
 		console.time(`select tweet`);
 		const entityManager = this.getEntityManager();
 
-		const tweet = await entityManager.findOne(TweetEntity, {
-			'select': [
-				'id',
-			],
-			'where': {
-				'user_id': userID,
-			},
-			'order': {
-				'id': 'ASC',
-			},
-		});
+		// const tweet = await entityManager.findOne(TweetEntity, {
+		// 	'select': [
+		// 		'id',
+		// 	],
+		// 	'where': {
+		// 		'user_id': userID,
+		// 	},
+		// 	'order': {
+		// 		'id': 'ASC',
+		// 	},
+		// });
+
+		// const tweet = await entityManager.createQueryBuilder()
+		// 	.select('id')
+		// 	.from(TweetEntity, 'tweets')
+		// 	.where('tweets.user_id = :userID', {
+		// 		'userID': userID,
+		// 	})
+		// 	.orderBy('tweets.id', 'ASC')
+		// 	.getOne();
+
+		const query = `select \`id\` from \`tweets\` where \`user_id\` = '${userID}' order by \`id\` asc limit 1`;
+		const tweet = await entityManager.query(query);
 
 		console.timeEnd(`select tweet`);
 		if(tweet === undefined) {

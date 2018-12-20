@@ -1,5 +1,7 @@
 # twitter-crawler
 
+[![Build Status](https://travis-ci.org/sapphiredev/twitter-crawler.svg?branch=master)](https://travis-ci.org/sapphiredev/twitter-crawler)
+
 ## prerequisites
 ```sh
 # install packages

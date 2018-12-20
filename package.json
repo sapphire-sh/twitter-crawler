@@ -15,7 +15,10 @@
     "start:docker": "./scripts/start.sh",
     "typeorm": "ts-node ./node_modules/.bin/typeorm",
     "migration:generate": "npm run typeorm migration:generate -- -n PostRefactoring -d ./migrations",
-    "migration:run": "npm run typeorm migration:run"
+    "migration:run": "npm run typeorm migration:run",
+    "_test": "cross-env NODE_ENV=test jest",
+    "test": "npm run _test",
+    "coverage": "npm run _test -- --coverage"
   },
   "repository": {
     "type": "git",
@@ -32,12 +35,15 @@
   "homepage": "https://github.com/sapphiredev/twitter-crawler#readme",
   "devDependencies": {
     "@types/express": "^4.16.0",
+    "@types/jest": "^23.3.10",
     "@types/node": "^10.12.18",
     "@types/puppeteer": "^1.11.1",
     "@types/request": "^2.48.1",
     "@types/twit": "^2.2.20",
     "cross-env": "^5.2.0",
     "file-loader": "^2.0.0",
+    "jest": "^23.6.0",
+    "ts-jest": "^23.10.5",
     "ts-loader": "^5.3.1",
     "ts-node": "^7.0.1",
     "tslint": "^5.12.0",
@@ -55,5 +61,28 @@
     "request": "^2.88.0",
     "twit": "^2.2.11",
     "typeorm": "^0.2.9"
+  },
+  "jest": {
+    "globals": {
+      "__dev": false,
+      "__test": true
+    },
+    "testMatch": [
+      "**/?(*.)test.ts?(x)"
+    ],
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "moduleFileExtensions": [
+      "js",
+      "ts",
+      "tsx",
+      "json"
+    ],
+    "moduleNameMapper": {
+      "~/client/(.*)": "<rootDir>/src/client/$1",
+      "~/server/(.*)": "<rootDir>/src/server/$1",
+      "~/shared/(.*)": "<rootDir>/src/shared/$1"
+    }
   }
 }

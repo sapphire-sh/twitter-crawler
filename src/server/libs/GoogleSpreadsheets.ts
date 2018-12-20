@@ -11,18 +11,18 @@ import Twit from 'twit';
 
 import {
 	Processor,
-} from '../libs/Processor';
+} from './Processor';
 
 import {
 	UserEntity,
-} from '../entities';
+} from '~/server/entities';
 
 import {
 	Command,
 	Manifest,
 	Sheet,
 	Coordinates,
-} from '../models';
+} from '~/shared/models';
 
 export class GoogleSpreadsheets extends Processor {
 	private static instance: GoogleSpreadsheets | null = null;

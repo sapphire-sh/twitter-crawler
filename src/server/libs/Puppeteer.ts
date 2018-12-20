@@ -9,20 +9,14 @@ import {
 } from './Processor';
 
 import {
-	GoogleSpreadsheets,
-} from '../libs';
-
-import {
 	Command,
 	Manifest,
 	TweetDeckConfig,
-} from '../models';
+} from '~/shared/models';
 
 import {
-	dataPath,
-	download,
 	sleep,
-} from '../helpers';
+} from '~/shared/helpers';
 
 export class Puppeteer extends Processor {
 	private static instance: Puppeteer | null = null;
@@ -126,10 +120,10 @@ export class Puppeteer extends Processor {
 
 	public async initialize(): Promise<TweetDeckConfig> {
 		try {
-			await fsPromises.lstat(dataPath);
+			await fsPromises.lstat(__directories.data_dir);
 		}
 		catch(err) {
-			await fsPromises.mkdir(dataPath);
+			await fsPromises.mkdir(__directories.data_dir);
 		}
 
 		this.browser = await puppeteer.launch({

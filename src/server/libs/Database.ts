@@ -17,16 +17,16 @@ import {
 import {
 	TweetEntity,
 	UserEntity,
-} from '../entities';
+} from '~/server/entities';
 
 import {
 	Command,
 	Manifest,
-} from '../models';
+} from '~/shared/models';
 
 import {
 	convertToBase64,
-} from '../helpers';
+} from '~/shared/helpers';
 
 export class Database extends Processor {
 	private static instance: Database | null = null;

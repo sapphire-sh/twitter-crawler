@@ -5,6 +5,16 @@ const nodeExternals = require('webpack-node-externals');
 
 const env = process.env.NODE_ENV === 'production' ? 'production' : 'development';
 
+const rootDir = path.resolve(__dirname);
+const srcDir = path.resolve(rootDir, './src');
+const distDir = path.resolve(rootDir, './dist');
+const clientDir = path.resolve(srcDir, './client');
+const serverDir = path.resolve(srcDir, './server');
+const sharedDir = path.resolve(srcDir, './shared');
+const credentialsDir = path.resolve(rootDir, './credentials');
+const tokensDir = path.resolve(rootDir, './tokens');
+const dataDir = path.resolve(rootDir, './data');
+
 const config = {
 	'module': {
 		'rules': [
@@ -24,11 +34,27 @@ const config = {
 			'.js',
 			'.json',
 		],
+		'alias': {
+			'~/client': clientDir,
+			'~/server': serverDir,
+			'~/shared': sharedDir,
+		},
 	},
 	'plugins': [
 		new webpack.DefinePlugin({
 			'__dev': process.env.NODE_ENV === 'development',
 			'__test': process.env.NODE_ENV === 'test',
+			'__directories': JSON.stringify({
+				'root_dir': rootDir,
+				'src_dir': srcDir,
+				'dist_dir': distDir,
+				'client_dir': clientDir,
+				'server_dir': serverDir,
+				'shared_dir': sharedDir,
+				'credentials_dir': credentialsDir,
+				'tokens_dir': tokensDir,
+				'data_dir': dataDir,
+			}),
 		}),
 		new webpack.ProgressPlugin(),
 	],
@@ -38,9 +64,9 @@ const config = {
 module.exports = [
 	{
 		...config,
-		'entry': path.resolve(__dirname, 'src/client', 'index.tsx'),
+		'entry': path.resolve(clientDir, 'index.tsx'),
 		'output': {
-			'path': path.resolve(__dirname, 'dist/assets'),
+			'path': path.resolve(distDir, './assets'),
 			'publicPath': '/assets',
 			'filename': 'main.js',
 		},
@@ -62,9 +88,9 @@ module.exports = [
 	},
 	{
 		...config,
-		'entry': path.resolve(__dirname, 'src/server', 'index.ts'),
+		'entry': path.resolve(serverDir, 'index.ts'),
 		'output': {
-			'path': path.resolve(__dirname, 'dist'),
+			'path': distDir,
 			'filename': 'main.js',
 		},
 		'target': 'node',

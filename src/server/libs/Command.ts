@@ -2,7 +2,7 @@ import {
 	Command,
 	CommandType,
 	ProcessorType,
-} from '../models';
+} from '~/shared/models';
 
 export class CommandFactory {
 	private static getProcessorType(type: CommandType): ProcessorType {

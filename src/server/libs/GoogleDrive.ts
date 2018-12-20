@@ -9,11 +9,11 @@ import {
 
 import {
 	Processor,
-} from '../libs/Processor';
+} from './Processor';
 
 import {
 	Command,
-} from '../models';
+} from '~/shared/models';
 
 export class GoogleDrive extends Processor {
 	private static instance: GoogleDrive | null = null;

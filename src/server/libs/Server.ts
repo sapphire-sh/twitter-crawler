@@ -10,7 +10,8 @@ export class Server {
 
 	private constructor(port: number) {
 		const app = Express();
-		app.use('/', Express.static(path.resolve(__dirname, '../../../dist/assets')));
+		const assetsDir = path.resolve(__directories.dist_dir, './assets');
+		app.use('/', Express.static(assetsDir));
 
 		this.server = app.listen(port, () => {
 			console.log(`http://localhost:${port}`);

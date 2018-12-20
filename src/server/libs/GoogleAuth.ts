@@ -10,11 +10,11 @@ import {
 
 import {
 	CredentialsType,
-} from '../models';
+} from '~/shared/models';
 
 import {
 	readJSON,
-} from '../helpers';
+} from '~/shared/helpers';
 
 const SCOPES = [
 	'https://www.googleapis.com/auth/drive.metadata.readonly',
@@ -29,8 +29,8 @@ export class GoogleAuth<T extends CredentialsType> {
 	constructor(e: T) {
 		this.credentialsType = e;
 		const fileName = `${this.credentialsType}.json`;
-		this.credentialsPath = path.resolve(__dirname, '../../../credentials', fileName);
-		this.tokensPath = path.resolve(__dirname, '../../../tokens', fileName);
+		this.credentialsPath = path.resolve(__directories.credentials_dir, fileName);
+		this.tokensPath = path.resolve(__directories.tokens_dir, fileName);
 	}
 
 	public async initialize(): Promise<OAuth2Client | null> {

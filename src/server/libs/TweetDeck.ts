@@ -12,7 +12,7 @@ import {
 	TweetDeckFetchUserIDsResponse,
 	TweetDeckFetchUserResponse,
 	TweetDeckFetchUserTweetsResponse,
-} from '../models';
+} from '~/shared/models';
 
 export class TweetDeck extends Processor {
 	private static instance: TweetDeck | null = null;

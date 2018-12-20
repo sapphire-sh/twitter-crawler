@@ -4,20 +4,16 @@ import {
 	GoogleSpreadsheets,
 	Puppeteer,
 	TweetDeck,
-} from './libs';
-
-import {
-	UserEntity,
-} from './entities';
+} from '~/server/libs';
 
 import {
 	Command,
 	CredentialsType,
-} from './models';
+} from '~/shared/models';
 
 import {
 	sleep,
-} from './helpers';
+} from '~/shared/helpers';
 
 const DRIVE_ID = '1LBftZfGtRYSfNF0azqN3t0u1dNPy05ta';
 const SHEETS_ID = '14ls6Zi-78B_pGqKEe_f4qrP_7HL5zkKoKU5ofrGR9Pk';
